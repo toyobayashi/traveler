@@ -1,0 +1,13 @@
+{
+  "extends": "./script/tsconfig.json",
+  "compilerOptions": {
+    "module": "es6",
+    "target": "es2017",
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "sourceMap": true
+  },
+  "include": [
+    "./src/**/*"
+  ]
+}

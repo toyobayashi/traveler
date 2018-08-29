@@ -7,5 +7,7 @@ declare module 'vue/types/vue' {
     electron: typeof electron
     request: typeof request
     client: Client
+    bus: Vue
+    changeStatus (status: string): void
   }
 }

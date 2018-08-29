@@ -1,17 +1,20 @@
-import { Vue, Component } from 'vue-property-decorator'
+import { Component } from 'vue-property-decorator'
+import Modal from './modal'
+import Button from '../vue/Button.vue'
+import InputText from '../vue/InputText.vue'
 
-@Component
-export default class extends Vue {
+@Component({
+  components: {
+    Button,
+    InputText
+  }
+})
+export default class extends Modal {
+
   username: string = ''
   password: string = ''
   point: string[] = []
   ctx: CanvasRenderingContext2D
-
-  verifyClick (e: MouseEvent) {
-    const pos = `${e.offsetX},${e.offsetY - 30}`
-    this.point.push(pos)
-    console.log(this.point)
-  }
 
   async captchaImage () {
     this.point = []
@@ -32,34 +35,34 @@ export default class extends Vue {
     }
   }
 
-  async auth () {
-    console.log(await this.client.auth())
-    console.log(this.client.getUser())
-  }
-
-  async logout () {
-    console.log(await this.client.logout())
-    console.log(this.client.getUser())
+  verifyClick (e: MouseEvent) {
+    const pos = `${e.offsetX},${e.offsetY - 30}`
+    this.point.push(pos)
+    console.log(this.point)
   }
 
   async verify () {
+    this.changeStatus('登录中')
     const res = await this.client.verify(this.username, this.password, this.point.join(','))
     if (res.err) {
       console.log(res.err)
+      this.changeStatus(res.err.message)
       return this.captchaImage()
     } else {
       console.log(res.data)
+      this.changeStatus('已就绪')
+      this.close()
+      this.captchaImage()
     }
-  }
-
-  async getPassenger (name?: string) {
-    console.log(await this.client.getPassenger(name))
   }
 
   mounted () {
     this.$nextTick(() => {
       this.ctx = (this.$refs.verify as HTMLCanvasElement).getContext('2d') as CanvasRenderingContext2D
       this.captchaImage()
+      this.bus.$on('modal:login', () => {
+        this.show = true
+      })
     })
   }
 }

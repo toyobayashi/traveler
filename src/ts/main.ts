@@ -8,7 +8,8 @@ function createWindow () {
   const linuxIcon: string = require('../../res/512x512.png')
   const browerWindowOptions: BrowserWindowConstructorOptions = {
     width: 800,
-    height: 600
+    height: 600,
+    backgroundColor: '#E5E5E5'
   }
 
   if (process.platform === 'linux') {

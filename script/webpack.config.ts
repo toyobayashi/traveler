@@ -11,6 +11,7 @@ const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development
 
 let mainConfig: Configuration = {
   mode,
+  context: path.join(__dirname, '..'),
   target: 'electron-main',
   devtool: process.env.NODE_ENV !== 'production' ? 'inline-source-map' : void 0,
   entry: {
@@ -30,6 +31,15 @@ let mainConfig: Configuration = {
         test: /\.ts$/,
         exclude: /node_modules/,
         loader: 'ts-loader'
+      },
+      {
+        test: /\.(jpg|png|ico|icns)$/,
+        use: [{
+          loader: 'file-loader',
+          options: {
+            name: './img/[name].[ext]'
+          }
+        }]
       }
     ]
   },
@@ -40,6 +50,7 @@ let mainConfig: Configuration = {
 
 let rendererConfig: Configuration = {
   mode,
+  context: path.join(__dirname, '..'),
   target: 'electron-renderer',
   devtool: process.env.NODE_ENV !== 'production' ? 'inline-source-map' : void 0,
   entry: {
@@ -78,6 +89,15 @@ let rendererConfig: Configuration = {
           process.env.NODE_ENV === 'production' ? MiniCssExtractPlugin.loader : 'vue-style-loader',
           'css-loader'
         ]
+      },
+      {
+        test: /\.(jpg|png|ico|icns)$/,
+        use: [{
+          loader: 'url-loader',
+          options: {
+            name: './img/[name].[ext]'
+          }
+        }]
       }
     ]
   },

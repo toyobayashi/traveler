@@ -1,14 +1,24 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, BrowserWindowConstructorOptions, nativeImage } from 'electron'
 import { format } from 'url'
 import { join } from 'path'
 
 let mainWindow: BrowserWindow | null
 
 function createWindow () {
-  mainWindow = new BrowserWindow({
+  const linuxIcon: string = require('../../res/512x512.png')
+  const browerWindowOptions: BrowserWindowConstructorOptions = {
     width: 800,
     height: 600
-  })
+  }
+
+  if (process.platform === 'linux') {
+    browerWindowOptions.icon = nativeImage.createFromPath(join(__dirname, linuxIcon))
+  } else {
+    if (process.env.NODE_ENV !== 'production') {
+      browerWindowOptions.icon = process.platform === 'win32' ? nativeImage.createFromPath(join(__dirname, '../res/traveler.ico')) : nativeImage.createFromPath(join(__dirname, '../res/traveler.icns'))
+    }
+  }
+  mainWindow = new BrowserWindow(browerWindowOptions)
 
   if (process.env.NODE_ENV !== 'production') {
     mainWindow.loadURL('http://localhost:7080/')

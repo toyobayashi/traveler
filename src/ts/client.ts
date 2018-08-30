@@ -46,6 +46,14 @@ export interface PassengerResponse {
   }
 }
 
+export interface Station {
+  name: string
+  code: string
+  fullSpelling: string
+  initialSpelling: string
+  index: number
+}
+
 const res = <T = any>(err: Error | null, data: T) => ({ err, data })
 
 export type User = {
@@ -62,6 +70,7 @@ class Client {
   private static AUTH_CLIENT = '/otn/uamauthclient'
   private static LOGOUT = '/otn/login/loginOut'
   private static GET_PASSENGER = '/otn/confirmPassenger/getPassengerDTOs'
+  private static STATION_NAME = '/otn/resources/js/framework/station_name.js'
 
   private _user: User = null
 
@@ -202,6 +211,31 @@ class Client {
         if (this._user) this._user.passengers = passengerResult.data.normal_passengers
         return res(null, passengerResult.data.normal_passengers)
       }
+    } catch (err) {
+      return res(err, null)
+    }
+  }
+
+  public async stationName () {
+    try {
+      const jsCode = (await request<string>({
+        method: 'GET',
+        url: Client.STATION_NAME
+      })).data
+
+      const matchResult = jsCode.match(/=\s*['"](.*)['"]/)
+      if (!matchResult) return res(new Error('获取站名失败'), null)
+
+      const str = matchResult[1]
+      const stringStations = str.split('@').slice(1)
+      const objectStasions: Station[] = []
+      for (let i = 0; i < stringStations.length; i++) {
+        const [, name, code, fullSpelling, initialSpelling, index] = stringStations[i].split('|')
+        objectStasions[i] = { name, code, fullSpelling, initialSpelling, index: Number(index) }
+      }
+
+      console.log(objectStasions)
+      return res(null, objectStasions)
     } catch (err) {
       return res(err, null)
     }

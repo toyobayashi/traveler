@@ -41,6 +41,15 @@ export default class extends Modal {
     console.log(this.point)
   }
 
+  removeMark (p: string) {
+    for (let i = 0; i < this.point.length; i++) {
+      if (p === this.point[i]) {
+        this.point.splice(i, 1)
+        break
+      }
+    }
+  }
+
   async verify () {
     this.changeStatus('登录中')
     const res = await this.client.verify(this.username, this.password, this.point.join(','))

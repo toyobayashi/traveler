@@ -234,7 +234,6 @@ class Client {
         objectStasions[i] = { name, code, fullSpelling, initialSpelling, index: Number(index) }
       }
 
-      console.log(objectStasions)
       return res(null, objectStasions)
     } catch (err) {
       return res(err, null)

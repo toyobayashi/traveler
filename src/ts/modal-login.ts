@@ -93,9 +93,10 @@ export default class extends Modal {
   mounted () {
     this.$nextTick(() => {
       this.ctx = (this.$refs.verify as HTMLCanvasElement).getContext('2d') as CanvasRenderingContext2D
-      this.captchaImage()
+
       this.bus.$on('modal:login', () => {
         this.open()
+        this.captchaImage()
         if (this.username !== '') {
           const inputEl = (this.$refs.password as any).$el
           setTimeout(() => inputEl.focus(), 0)

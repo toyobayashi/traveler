@@ -4,6 +4,7 @@ import * as HtmlWebpackPlugin from 'html-webpack-plugin'
 import * as MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import * as OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin'
 import * as UglifyJSPlugin from 'uglifyjs-webpack-plugin'
+import * as webpackNodeExternals from 'webpack-node-externals'
 import { VueLoaderPlugin } from 'vue-loader'
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
@@ -25,6 +26,7 @@ let mainConfig: Configuration = {
     __dirname: false,
     __filename: false
   },
+  externals: [webpackNodeExternals()],
   module: {
     rules: [
       {
@@ -64,6 +66,9 @@ let rendererConfig: Configuration = {
     __dirname: false,
     __filename: false
   },
+  externals: [webpackNodeExternals({
+    whitelist: [/webpack/]
+  })],
   module: {
     rules: [
       {
@@ -110,7 +115,18 @@ let rendererConfig: Configuration = {
       inject: false,
       template: path.join(__dirname, './index.template.ts')
     })
-  ]
+  ],
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'dll',
+          chunks: 'all'
+        }
+      }
+    }
+  }
 }
 
 if (process.env.NODE_ENV === 'production') {
@@ -134,11 +150,15 @@ if (process.env.NODE_ENV === 'production') {
     })
   ]
   rendererConfig.optimization = {
+    ...(rendererConfig.optimization || {}),
     minimizer: [
       uglifyJSPlugin(),
       new OptimizeCSSAssetsPlugin({})
     ]
   }
+  rendererConfig.externals = [webpackNodeExternals({
+    whitelist: [/vue/]
+  })]
   mainConfig.optimization = {
     minimizer: [uglifyJSPlugin()]
   }

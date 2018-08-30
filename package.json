@@ -14,6 +14,10 @@
   ],
   "author": "toyobayashi",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toyobayashi/traveler"
+  },
   "devDependencies": {
     "@types/html-webpack-plugin": "2.30.3",
     "@types/mini-css-extract-plugin": "0.2.0",
@@ -22,6 +26,7 @@
     "@types/request": "^2.47.1",
     "@types/uglifyjs-webpack-plugin": "1.1.0",
     "@types/webpack": "4.4.5",
+    "@types/webpack-node-externals": "^1.6.3",
     "@types/webpack-serve": "^2.0.0",
     "cross-env": "5.2.0",
     "css-loader": "0.28.11",
@@ -31,7 +36,6 @@
     "html-webpack-plugin": "3.2.0",
     "mini-css-extract-plugin": "0.4.1",
     "optimize-css-assets-webpack-plugin": "4.0.3",
-    "request": "^2.88.0",
     "style-loader": "0.21.0",
     "ts-loader": "4.4.2",
     "ts-node": "7.0.0",
@@ -46,6 +50,10 @@
     "vue-property-decorator": "7.0.0",
     "vue-template-compiler": "2.5.16",
     "webpack": "4.17.1",
+    "webpack-node-externals": "^1.7.2",
     "webpack-serve": "^2.0.2"
+  },
+  "dependencies": {
+    "request": "^2.88.0"
   }
 }

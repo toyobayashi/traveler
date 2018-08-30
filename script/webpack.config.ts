@@ -96,7 +96,7 @@ let rendererConfig: Configuration = {
         ]
       },
       {
-        test: /\.(jpg|png|ico|icns)$/,
+        test: /\.(jpg|png|gif|ico|icns)$/,
         use: [{
           loader: 'url-loader',
           options: {

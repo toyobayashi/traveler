@@ -48,6 +48,12 @@ export interface PassengerResponse {
 
 const res = <T = any>(err: Error | null, data: T) => ({ err, data })
 
+export type User = {
+  username: string,
+  name: string,
+  passengers: PassengerDTO[]
+} | null
+
 class Client {
   private static CAPTCHA_IMAGE = () => `/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&${Math.random()}`
   private static CAPTCHA_CHECK = '/passport/captcha/captcha-check'
@@ -57,10 +63,7 @@ class Client {
   private static LOGOUT = '/otn/login/loginOut'
   private static GET_PASSENGER = '/otn/confirmPassenger/getPassengerDTOs'
 
-  private _user: {
-    username: string,
-    name: string
-  } | null = null
+  private _user: User = null
 
   public getUser () {
     return this._user
@@ -154,7 +157,8 @@ class Client {
       if (authResult.data) {
         this._user = {
           username: username,
-          name: authResult.data.username
+          name: authResult.data.username,
+          passengers: []
         }
       }
       return authResult
@@ -195,6 +199,7 @@ class Client {
       if (!passengerResult.data.normal_passengers) {
         return res(new Error(passengerResult.data.exMsg), [])
       } else {
+        if (this._user) this._user.passengers = passengerResult.data.normal_passengers
         return res(null, passengerResult.data.normal_passengers)
       }
     } catch (err) {

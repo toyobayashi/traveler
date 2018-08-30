@@ -43,4 +43,10 @@ export default class extends Vue {
 .tr-btn-default {
   background-color: rgb(0, 128, 255);
 }
+
+.tr-btn[disabled] {
+  background-color: rgb(237, 235, 235) !important;
+  color: #000;
+  cursor: not-allowed;
+}
 </style>

@@ -1,5 +1,4 @@
 import { Vue, Component } from 'vue-property-decorator'
-// import Login from '../vue/login.vue'
 import TheHeader from '../vue/TheHeader.vue'
 import ModalLogin from '../vue/ModalLogin.vue'
 import Client from './client'

@@ -1,8 +1,7 @@
 <template>
 <div class="root" id="root">
-  <TheHeader :user="client.getUser()" :status="status"/>
+  <TheHeader :user="client.getUser()" :status="status" />
   <ModalLogin :width="400" />
-  <!-- <Login /> -->
 </div>
 </template>
 

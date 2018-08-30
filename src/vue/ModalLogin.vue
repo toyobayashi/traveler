@@ -4,8 +4,8 @@
     <div class="modal-header">登录</div>
     <div class="modal-body">
       <div>
-        <div class="flex-between input-line"><span>登录名：</span><InputText style="width: 230px" v-model="username" placeholder="用户名 / 邮箱 / 手机号" /></div>
-        <div class="flex-between input-line"><span>密码：</span><InputText style="width: 230px" type="password" v-model="password" /></div>
+        <div class="flex-between input-line"><span>登录名：</span><InputText style="width: 230px" ref="username" v-model="username" placeholder="用户名 / 邮箱 / 手机号" /></div>
+        <div class="flex-between input-line"><span>密码：</span><InputText style="width: 230px" ref="password" type="password" v-model="password" /></div>
       </div>
       <div class="text-center">
         <div class="canvas-wrap">
@@ -15,7 +15,9 @@
             width="293px"
             height="190px"
             @click="verifyClick"></canvas>
-          <img 
+          <img src="../../res/loading.gif" class="loading" v-show="loading" />
+          <img
+            class="mark"
             src="../../res/mark.png"
             v-for="p in point"
             :key="p"
@@ -29,7 +31,7 @@
     </div>
     <div class="modal-footer flex-around">
       <Button @click.native="captchaImage">换一张</Button>
-      <Button @click.native="close">关闭</Button>
+      <Button @click.native="_close">关闭</Button>
       <Button color="orange" @click.native="verify">登录</Button>
     </div>
   </div>
@@ -53,8 +55,17 @@
   position: relative;
   display: inline-block;
 }
-.canvas-wrap > img {
+.canvas-wrap > .mark {
   position: absolute;
   display: block;
+}
+.canvas-wrap > .loading {
+  display: block;
+  width: 48px;
+  height: 48px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 </style>

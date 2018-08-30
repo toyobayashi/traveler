@@ -8,4 +8,8 @@ export default class extends Vue {
   close () {
     this.show = false
   }
+
+  open () {
+    this.show = true
+  }
 }

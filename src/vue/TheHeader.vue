@@ -5,14 +5,14 @@
 </div>
 </template>
 
-<script lang="ts" src="../ts/the-header.ts">
+<script lang="ts" src="../ts/renderer/v-the-header.ts">
 </script>
 
 <style scoped>
 .header {
   background-color: rgb(71, 141, 205);
   height: 30px;
-  width: calc(100% - 20px);
+  width: 100%;
   position: absolute;
   top: 0;
   padding: 0 10px;

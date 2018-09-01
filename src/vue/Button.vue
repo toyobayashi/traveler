@@ -2,16 +2,7 @@
 <button :class="['tr-btn', colorClass]" :style="{ width: width + 'px' }"><slot></slot></button>
 </template>
 
-<script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator'
-@Component
-export default class extends Vue {
-  @Prop({ default: 'default' }) color: string
-  @Prop({ default: 90 }) width: number
-  get colorClass () {
-    return `tr-btn-${this.color}`
-  }
-}
+<script lang="ts" src="../ts/renderer/v-button.ts">
 </script>
 
 

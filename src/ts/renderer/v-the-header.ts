@@ -1,5 +1,5 @@
 import { Vue, Component, Prop } from 'vue-property-decorator'
-import Button from '../vue/Button.vue'
+import Button from '../../vue/Button.vue'
 import { User } from './client'
 
 @Component({

@@ -38,7 +38,7 @@
 </div>
 </template>
 
-<script lang="ts" src="../ts/modal-login.ts">
+<script lang="ts" src="../ts/renderer/v-modal-login.ts">
 </script>
 
 <style scoped>

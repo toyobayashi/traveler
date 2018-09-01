@@ -1,7 +1,7 @@
 import { Component } from 'vue-property-decorator'
 import Modal from './modal'
-import Button from '../vue/Button.vue'
-import InputText from '../vue/InputText.vue'
+import Button from '../../vue/Button.vue'
+import InputText from '../../vue/InputText.vue'
 
 @Component({
   components: {

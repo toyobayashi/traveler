@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import vueGlobal from './global'
-import App from '../vue/App.vue'
+import App from '../../vue/App.vue'
 
 Vue.use(vueGlobal())
 

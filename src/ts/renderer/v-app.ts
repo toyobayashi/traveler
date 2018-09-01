@@ -1,6 +1,6 @@
 import { Vue, Component } from 'vue-property-decorator'
-import TheHeader from '../vue/TheHeader.vue'
-import ModalLogin from '../vue/ModalLogin.vue'
+import TheHeader from '../../vue/TheHeader.vue'
+import ModalLogin from '../../vue/ModalLogin.vue'
 import Client, { Station } from './client'
 
 @Component({

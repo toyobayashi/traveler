@@ -1,6 +1,6 @@
 import * as electron from 'electron'
-import request from '../request'
-import Client from '../client'
+import request from '../renderer/request'
+import Client from '../renderer/client'
 
 declare module 'vue/types/vue' {
   interface Vue {

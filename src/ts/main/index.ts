@@ -5,11 +5,12 @@ import { join } from 'path'
 let mainWindow: BrowserWindow | null
 
 function createWindow () {
-  const linuxIcon: string = require('../../res/512x512.png')
+  const linuxIcon: string = require('../../../res/1024x1024.png')
   const browerWindowOptions: BrowserWindowConstructorOptions = {
     width: 800,
     height: 600,
-    backgroundColor: '#E5E5E5'
+    backgroundColor: '#E5E5E5',
+    show: false
   }
 
   if (process.platform === 'linux') {
@@ -21,9 +22,15 @@ function createWindow () {
   }
   mainWindow = new BrowserWindow(browerWindowOptions)
 
+  mainWindow.on('ready-to-show', function () {
+    if (!mainWindow) return
+    mainWindow.show()
+    mainWindow.focus()
+    if (process.env.NODE_ENV !== 'production') mainWindow.webContents.openDevTools()
+  })
+
   if (process.env.NODE_ENV !== 'production') {
-    mainWindow.loadURL('http://localhost:7080/')
-    mainWindow.webContents.openDevTools()
+    mainWindow.loadURL('http://localhost:7080')
   } else {
     mainWindow.loadURL(format({
       pathname: join(__dirname, 'index.html'),

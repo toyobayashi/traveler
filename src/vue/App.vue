@@ -5,20 +5,23 @@
 </div>
 </template>
 
-<script lang="ts" src="../ts/app.ts">
+<script lang="ts" src="../ts/renderer/v-app.ts">
 </script>
 
 <style>
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
+
 .root {
   position: absolute;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  /* overflow: hidden; */
   font-family: 'Microsoft YaHei';
+  padding-top: 30px;
 }
 
 button, input {
@@ -29,6 +32,7 @@ button, input {
   position: absolute;
   z-index: 1000;
   background-color: rgba(0, 0, 0, 0.6);
+  top: 0;
   width: 100%;
   height: 100%;
 }

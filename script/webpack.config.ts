@@ -16,7 +16,7 @@ let mainConfig: Configuration = {
   target: 'electron-main',
   devtool: process.env.NODE_ENV !== 'production' ? 'inline-source-map' : void 0,
   entry: {
-    main: [path.join(__dirname, '../src/ts/main.ts')]
+    main: [path.join(__dirname, '../src/ts/main/index.ts')]
   },
   output: {
     filename: '[name].js',
@@ -56,7 +56,7 @@ let rendererConfig: Configuration = {
   target: 'electron-renderer',
   devtool: process.env.NODE_ENV !== 'production' ? 'inline-source-map' : void 0,
   entry: {
-    renderer: [path.join(__dirname, '../src/ts/index.ts')]
+    renderer: [path.join(__dirname, '../src/ts/renderer/index.ts')]
   },
   output: {
     filename: '[name].js',

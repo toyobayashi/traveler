@@ -7,6 +7,6 @@ export default class extends Vue {
   @Prop({ default: '' }) value: string
   @Prop({ default: '' }) placeholder: string
   @Emit() input (_value: string) {
-    console.log(_value)
+    // this.$emit(_value)
   }
 }

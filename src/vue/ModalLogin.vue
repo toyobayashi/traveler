@@ -1,41 +1,38 @@
 <template>
-<div class="modal-wrap flex-center" v-show="show">
-  <div class="modal" :style="{ width: width + 'px' }">
-    <div class="modal-header">登录</div>
-    <div class="modal-body">
-      <div>
-        <div class="flex-between input-line"><span>登录名：</span><InputText style="width: 230px" ref="username" v-model="username" placeholder="用户名 / 邮箱 / 手机号" /></div>
-        <div class="flex-between input-line"><span>密码：</span><InputText style="width: 230px" ref="password" type="password" v-model="password" /></div>
-      </div>
-      <div class="text-center">
-        <div class="canvas-wrap">
-          <canvas
-            class="verify"
-            ref="verify"
-            width="293px"
-            height="190px"
-            @click="verifyClick"></canvas>
-          <img src="../../res/loading.gif" class="loading" v-show="loading" />
-          <img
-            class="mark"
-            src="../../res/mark.png"
-            v-for="p in point"
-            :key="p"
-            @click="removeMark(p)"
-            :style="{
-              top: (Number(p.split(',')[1]) + 17 + 2) + 'px',
-              left: (Number(p.split(',')[0]) - 13 + 2) + 'px'
-            }" />
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer flex-around">
-      <Button @click.native="captchaImage">换一张</Button>
-      <Button @click.native="_close">关闭</Button>
-      <Button color="orange" @click.native="verify">登录</Button>
+<Modal :show="show" :width="400">
+  <span slot="header">登录</span>
+  <div>
+    <div class="flex-between input-line"><span>登录名：</span><InputText style="width: 230px" v-focus="show" v-model="username" placeholder="用户名 / 邮箱 / 手机号" /></div>
+    <div class="flex-between input-line"><span>密码：</span><InputText style="width: 230px" type="password" v-model="password" /></div>
+  </div>
+  <div class="text-center">
+    <div class="canvas-wrap">
+      <canvas
+        v-canvas-init
+        class="verify"
+        ref="verify"
+        width="293px"
+        height="190px"
+        @click="verifyClick"></canvas>
+      <img src="../../res/loading.gif" class="loading" v-show="loading" />
+      <img
+        class="mark"
+        src="../../res/mark.png"
+        v-for="p in point"
+        :key="p"
+        @click="removeMark(p)"
+        :style="{
+          top: (Number(p.split(',')[1]) + 17 + 2) + 'px',
+          left: (Number(p.split(',')[0]) - 13 + 2) + 'px'
+        }" />
     </div>
   </div>
-</div>
+  <div slot="footer" class="flex-around">
+    <Button @click.native="captchaImage">换一张</Button>
+    <Button @click.native="close">关闭</Button>
+    <Button color="orange" @click.native="verify">登录</Button>
+  </div>
+</Modal>
 </template>
 
 <script lang="ts" src="../ts/renderer/v-modal-login.ts">

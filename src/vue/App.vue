@@ -1,6 +1,7 @@
 <template>
 <div class="root" id="root">
   <TheHeader :user="client.getUser()" :status="status" />
+  <TheSearchBar />
   <ModalLogin :width="400" />
 </div>
 </template>
@@ -20,12 +21,12 @@
   width: 100%;
   height: 100%;
   /* overflow: hidden; */
-  font-family: 'Microsoft YaHei';
+  font-family: -apple-system, BlinkMacSystemFont, Segoe WPC,Segoe UI, HelveticaNeue-Light, Noto Sans, Microsoft YaHei, PingFang SC, Hiragino Sans GB, Source Han Sans SC, Source Han Sans CN, Source Han Sans, sans-serif;
   padding-top: 30px;
 }
 
 button, input {
-  font-family: 'Microsoft YaHei';
+  font-family: -apple-system, BlinkMacSystemFont, Segoe WPC,Segoe UI, HelveticaNeue-Light, Noto Sans, Microsoft YaHei, PingFang SC, Hiragino Sans GB, Source Han Sans SC, Source Han Sans CN, Source Han Sans, sans-serif;
 }
 
 .modal-wrap {

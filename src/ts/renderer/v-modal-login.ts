@@ -1,37 +1,62 @@
-import { Component } from 'vue-property-decorator'
-import Modal from './modal'
+import { Component, Vue } from 'vue-property-decorator'
+import Modal from '../../vue/Modal.vue'
 import Button from '../../vue/Button.vue'
 import InputText from '../../vue/InputText.vue'
 
+let ctx: CanvasRenderingContext2D
+
 @Component({
   components: {
+    Modal,
     Button,
     InputText
+  },
+  directives: {
+    focus: {
+      componentUpdated (el, binding) {
+        if (binding.value && binding.oldValue !== binding.value) {
+          if ((el as HTMLInputElement).value) {
+            setTimeout(() => {
+              el.parentElement && el.parentElement.nextElementSibling && (el.parentElement.nextElementSibling.childNodes[1] as HTMLInputElement).focus()
+            }, 0)
+          } else {
+            setTimeout(() => {
+              el.focus()
+            }, 0)
+          }
+        }
+      }
+    },
+    canvasInit: {
+      inserted (el) {
+        ctx = (el as HTMLCanvasElement).getContext('2d') as CanvasRenderingContext2D
+      }
+    }
   }
 })
-export default class extends Modal {
+export default class extends Vue {
 
+  show: boolean = false
   username: string = localStorage.getItem('trUser') || ''
   password: string = ''
   point: string[] = []
   loading: boolean = false
-  ctx: CanvasRenderingContext2D
 
   keyboardListener = (ev: KeyboardEvent) => {
     if (ev.keyCode === 13) {
       this.verify()
     } else if (ev.keyCode === 27) {
-      this._close()
+      this.close()
     }
   }
 
-  _close () {
-    this.close()
+  close () {
     window.removeEventListener('keydown', this.keyboardListener)
+    this.show = false
   }
 
   async captchaImage () {
-    this.ctx.clearRect(0, 0, 293, 190)
+    ctx.clearRect(0, 0, 293, 190)
     this.loading = true
     this.point = []
     const res = await this.client.captchaImage()
@@ -39,7 +64,7 @@ export default class extends Modal {
       const img = new Image()
       img.src = `data:image/jpeg;base64,${res.data.toString('base64')}`
       img.onload = () => {
-        this.ctx.drawImage(img, 0, 0)
+        ctx.drawImage(img, 0, 0)
         this.loading = false
       }
       img.onerror = (e) => {
@@ -69,7 +94,7 @@ export default class extends Modal {
 
   async verify () {
     this.changeStatus('登录中')
-    this._close()
+    this.close()
     this.bus.$emit('loginBtn', true)
     const res = await this.client.verify(this.username, this.password, this.point.join(','))
     this.bus.$emit('loginBtn', false)
@@ -92,18 +117,9 @@ export default class extends Modal {
 
   mounted () {
     this.$nextTick(() => {
-      this.ctx = (this.$refs.verify as HTMLCanvasElement).getContext('2d') as CanvasRenderingContext2D
-
       this.bus.$on('modal:login', () => {
-        this.open()
+        this.show = true
         this.captchaImage()
-        if (this.username !== '') {
-          const inputEl = (this.$refs.password as any).$el
-          setTimeout(() => inputEl.focus(), 0)
-        } else {
-          const inputEl = (this.$refs.username as any).$el
-          setTimeout(() => inputEl.focus(), 0)
-        }
         window.addEventListener('keydown', this.keyboardListener)
       })
     })

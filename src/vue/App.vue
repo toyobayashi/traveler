@@ -1,7 +1,7 @@
 <template>
 <div class="root" id="root">
   <TheHeader :user="client.getUser()" :status="status" />
-  <TheSearchBar />
+  <TheSearchBar :stations="stationName"/>
   <ModalLogin :width="400" />
 </div>
 </template>

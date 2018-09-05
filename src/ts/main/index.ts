@@ -10,7 +10,9 @@ function createWindow () {
     width: 800,
     height: 600,
     backgroundColor: '#E5E5E5',
-    show: false
+    show: false,
+    minWidth: 800,
+    minHeight: 600
   }
 
   if (process.platform === 'linux') {

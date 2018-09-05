@@ -11,7 +11,7 @@
 <script lang="ts" src="../ts/renderer/v-input-text.ts">
 </script>
 
-<style scoped>
+<style>
 .input-text {
   display: block;
   height: 30px;

@@ -2,8 +2,6 @@ import { Vue, Component, Prop, Emit } from 'vue-property-decorator'
 import { Station } from './client'
 import InputText from '../../vue/InputText.vue'
 
-let init = false
-
 @Component({
   components: {
     InputText
@@ -32,11 +30,13 @@ export default class extends Vue {
   inputClicked () {
     const _value = this.value
     if (_value) {
-      this.stations = []
-      this.page = 0
-      for (let i = 0; i < this.stationsAll.length; i++) {
-        if (this.stationsAll[i].name.includes(_value) || this.stationsAll[i].fullSpelling.includes(_value) || this.stationsAll[i].initialSpelling.includes(_value)) {
-          this.stations.push(this.stationsAll[i])
+      if (!this.stations.length) {
+        this.stations = []
+        this.page = 0
+        for (let i = 0; i < this.stationsAll.length; i++) {
+          if (this.stationsAll[i].name.includes(_value) || this.stationsAll[i].fullSpelling.includes(_value) || this.stationsAll[i].initialSpelling.includes(_value)) {
+            this.stations.push(this.stationsAll[i])
+          }
         }
       }
     }
@@ -62,15 +62,12 @@ export default class extends Vue {
 
   mounted () {
     this.$nextTick(() => {
-      if (!init) {
-        const pagination = document.querySelectorAll('.pagination')
-        document.addEventListener('click', (ev) => {
-          if (Array.prototype.indexOf.call(pagination, ev.target && (ev.target as HTMLElement).parentElement) === -1) {
-            this.page = 0
-            this.stations = []
-          }
-        }, true)
-      }
+      document.addEventListener('click', (ev) => {
+        if (!this.$el.contains(ev.target as any)) {
+          this.page = 0
+          this.stations = []
+        }
+      }, false)
     })
   }
 }

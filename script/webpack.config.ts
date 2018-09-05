@@ -14,7 +14,6 @@ let mainConfig: Configuration = {
   mode,
   context: path.join(__dirname, '..'),
   target: 'electron-main',
-  devtool: process.env.NODE_ENV !== 'production' ? 'inline-source-map' : void 0,
   entry: {
     main: [path.join(__dirname, '../src/ts/main/index.ts')]
   },
@@ -54,7 +53,6 @@ let rendererConfig: Configuration = {
   mode,
   context: path.join(__dirname, '..'),
   target: 'electron-renderer',
-  devtool: process.env.NODE_ENV !== 'production' ? 'inline-source-map' : void 0,
   entry: {
     renderer: [path.join(__dirname, '../src/ts/renderer/index.ts')]
   },
@@ -163,6 +161,7 @@ if (process.env.NODE_ENV === 'production') {
     minimizer: [uglifyJSPlugin()]
   }
 } else {
+  rendererConfig.devtool = mainConfig.devtool = 'eval-source-map'
   rendererConfig.plugins = [
     ...(rendererConfig.plugins || []),
     new ForkTsCheckerWebpackPlugin({

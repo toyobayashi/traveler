@@ -22,7 +22,7 @@
   background-color: rgb(194, 117, 9);
 }
 .tr-btn-orange {
-  background-color: rgb(225, 128, 0);
+  background-color: rgb(255, 128, 0);
 }
 
 .tr-btn-default:hover {

@@ -1,26 +1,67 @@
 import { Vue, Component, Prop, Emit } from 'vue-property-decorator'
+import { getDays } from './util'
 
 @Component
 export default class extends Vue {
-  page: number = 0
-  numberPerPage: number = 10
+  year: number = new Date().getFullYear()
+  month: number = new Date().getMonth() + 1
+  date: number = new Date().getDate()
+  calenderShow: boolean = false
+
+  // yearAndMonth: string = getDate().substring(0, getDate().lastIndexOf('/'))
+  // numberPerPage: number = 10
   @Prop({ default: '' }) value: string
 
   @Emit('input') onInput (_value: string) {
     // this.$emit('input', _value)
   }
+  get yearAndMonth () {
+    return `${this.year}年${this.month}月`
+  }
 
-  // prev () {
-  //   return this.page > 0 ? --this.page : this.page = this.totalPage - 1
-  // }
+  get days () {
+    return getDays(`${this.year}/${this.month}`)
+  }
 
-  // next () {
-  //   return this.page < this.totalPage - 1 ? ++this.page : this.page = 0
-  // }
+  get firstDay () {
+    return new Date(this.year, this.month - 1, 1).getDay()
+  }
+
+  dateClicked (date: number) {
+    this.date = date
+    this.$emit('input', `${this.year}/${this.month}/${this.date}`)
+    this.calenderShow = false
+  }
+
+  inputClicked () {
+    if (!this.calenderShow) this.calenderShow = true
+  }
+
+  prev () {
+    if (this.month !== 1) {
+      --this.month
+    } else {
+      --this.year
+      this.month = 12
+    }
+  }
+
+  next () {
+    if (this.month !== 12) {
+      ++this.month
+    } else {
+      ++this.year
+      this.month = 1
+    }
+  }
 
   mounted () {
     this.$nextTick(() => {
-      // TODO
+      document.addEventListener('click', (ev) => {
+        if (!this.$el.contains(ev.target as any)) {
+          this.calenderShow = false
+        }
+      }, false)
     })
   }
 }

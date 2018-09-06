@@ -71,6 +71,7 @@ class Client {
   private static LOGOUT = '/otn/login/loginOut'
   private static GET_PASSENGER = '/otn/confirmPassenger/getPassengerDTOs'
   private static STATION_NAME = '/otn/resources/js/framework/station_name.js'
+  private static LEFT_TICKET = '/otn/leftTicket/queryA'
 
   private _user: User = null
 
@@ -235,6 +236,37 @@ class Client {
       }
 
       return res(null, objectStasions)
+    } catch (err) {
+      return res(err, null)
+    }
+  }
+
+  public async leftTicket (fromStation: string, toStation: string, trainDate: string, purposeCodes?: string) {
+    try {
+      const leftTicketResult = (await request<any>({
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        url: Client.LEFT_TICKET,
+        qs: {
+          'leftTicketDTO.train_date': trainDate,
+          'leftTicketDTO.from_station': fromStation,
+          'leftTicketDTO.to_station': toStation,
+          'purpose_codes': purposeCodes || 'ADULT'
+        }
+      })).data
+
+      if (typeof leftTicketResult === 'string') {
+        return res(new Error('查询余票失败'), null)
+      }
+
+      if (leftTicketResult.data.flag !== '1') {
+        return res(new Error('查询余票失败。flag = ' + leftTicketResult.data.flag), null)
+      }
+
+      return res(null, leftTicketResult.data.result || [])
     } catch (err) {
       return res(err, null)
     }

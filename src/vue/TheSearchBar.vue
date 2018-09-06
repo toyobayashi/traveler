@@ -3,7 +3,7 @@
   <div><div class="flex-around"><span class="title">出发地</span><InputStation v-model="from" :stations-all="stations"/></div></div>
   <div><div class="flex-around"><span class="title">目的地</span><InputStation v-model="to" :stations-all="stations"/></div></div>
   <div><div class="flex-around"><span class="title">出发日</span><InputCalender v-model="goDate"/></div></div>
-  <div class="text-center"><Button color="orange">查询</Button></div>
+  <div class="text-center"><Button color="orange" @click.native="query" :disabled="queryBtnDisabled">查询</Button></div>
 </div>
 </template>
 

@@ -20,7 +20,7 @@ export default class extends Vue {
   }
 
   get days () {
-    return getDays(`${this.year}/${this.month}`)
+    return getDays(`${this.year}-${this.month}`)
   }
 
   get firstDay () {
@@ -29,7 +29,7 @@ export default class extends Vue {
 
   dateClicked (date: number) {
     this.date = date
-    this.$emit('input', `${this.year}/${this.month}/${this.date}`)
+    this.$emit('input', `${this.year}-${this.month < 10 ? '0' + this.month : this.month}-${this.date < 10 ? '0' + this.date : this.date}`)
     this.calenderShow = false
   }
 

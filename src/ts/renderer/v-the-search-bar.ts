@@ -28,17 +28,22 @@ export default class extends Vue {
       if (this.stations[i].name === this.to) toCode = this.stations[i].code
     }
 
-    const trainDate = this.goDate.split('/').map((v, i) => {
-      if (i === 0) return v
-      return v.length > 1 ? v : '0' + v
-    }).join('-')
+    // const trainDate = this.goDate.split('/').map((v, i) => {
+    //   if (i === 0) return v
+    //   return v.length > 1 ? v : '0' + v
+    // }).join('-')
 
     this.queryBtnDisabled = true
-    let res = await this.client.leftTicket(fromCode, toCode, trainDate)
+    this.changeStatus('查询余票中')
+    let res = await this.client.leftTicket(fromCode, toCode, this.goDate)
     this.queryBtnDisabled = false
     if (res.err) {
+      this.changeStatus('查询余票失败')
+      this.bus.$emit('setTableData', [])
       console.log(res.err)
     } else {
+      this.changeStatus('已就绪')
+      this.bus.$emit('setTableData', res.data)
       console.log(res.data)
     }
   }

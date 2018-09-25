@@ -2,6 +2,7 @@
 <div class="root" id="root">
   <TheHeader :user="client.getUser()" :status="status" />
   <TheSearchBar :stations="stationName"/>
+  <TheTable :stations="stationName"/>
   <ModalLogin :width="400" />
 </div>
 </template>
@@ -84,5 +85,17 @@ button, input {
 
 .text-center {
   text-align: center;
+}
+
+.black {
+  color: #000 !important;
+}
+
+.bold {
+  font-weight: bold !important;
+}
+
+.ok {
+  color: #26a306 !important;
 }
 </style>

@@ -266,7 +266,81 @@ class Client {
         return res(new Error('查询余票失败。flag = ' + leftTicketResult.data.flag), null)
       }
 
-      return res(null, leftTicketResult.data.result || [])
+      if (!leftTicketResult.data.result || !leftTicketResult.data.result.length) return res(null, [])
+
+      const result = []
+      for (let i = 0; i < leftTicketResult.data.result.length; i++) {
+        const dataArr = leftTicketResult.data.result[i].split('|')
+        const code = dataArr[3]
+        const seatTypes = dataArr[35]
+
+        const train: any = {
+          secret: dataArr[0],
+          code,
+          seatTypes,
+          type: code[0],
+          trainNo: dataArr[2],
+          fromCode: dataArr[6],
+          toCode: dataArr[7],
+          fromTime: dataArr[8],
+          toTime: dataArr[9],
+          duration: dataArr[10],
+          status: dataArr[11] === 'Y',
+          ypInfo: dataArr[12],
+          locationCode: dataArr[15],
+          remark: dataArr[1]
+        }
+
+        for (let j = 0; j < seatTypes.length; j++) {
+          switch (seatTypes[j]) {
+            case 'A': // 高级动卧
+              if (!train.gjdw) train.gjdw = dataArr[20]
+              break
+            case 'F': // 动卧
+              if (!train.dw) train.dw = dataArr[33]
+              break
+            case '9': // 商务座
+              if (!train.swz) train.swz = dataArr[32]
+              break
+            case 'P': // 特等座
+              if (!train.tdz) train.tdz = dataArr[25]
+              break
+            case 'S': // 一等包座
+              if (!train.ydbz) train.ydbz = dataArr[27]
+              break
+            case 'M': // 一等座
+              if (!train.ydz) train.ydz = dataArr[31]
+              break
+            case 'O': // 二等座
+              if (!train.edz) train.edz = dataArr[30]
+              break
+            case '6': // 高级软卧
+              if (!train.gjrw) train.gjrw = dataArr[21]
+              break
+            case '4': // 软卧
+              if (!train.rw) train.rw = dataArr[23]
+              break
+            case '3': // 硬卧
+              if (!train.yw) train.yw = dataArr[28]
+              break
+            case '2': // 软座
+              if (!train.rz) train.rz = dataArr[24]
+              break
+            case '1': // 硬座或无座
+              if (!train.yz) train.yz = dataArr[29]
+              else train.wz = dataArr[26]
+              break
+            default: // 其他
+              if (!train.qt) train.qt = dataArr[22]
+              break
+          }
+
+        }
+
+        result.push(train)
+      }
+
+      return res(null, result)
     } catch (err) {
       return res(err, null)
     }

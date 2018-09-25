@@ -21,7 +21,7 @@
         :key="d"
         @click="dateClicked(d)"
         :class="{
-          active: value.split('/')[0] == year && value.split('/')[1] == month && value.split('/')[2] == d
+          active: value.split('-')[0] == year && value.split('-')[1] == month && value.split('-')[2] == d
         }">{{d}}</span>
     </div>
   </div>
@@ -44,6 +44,7 @@
   box-sizing: border-box;
   font-size: 12px;
   background: #fff;
+  z-index: 1000;
 }
 .input-calender .pagination > span:nth-child(odd) {
   border: 1px solid #333;

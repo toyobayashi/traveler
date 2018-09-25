@@ -7,12 +7,15 @@ let mainWindow: BrowserWindow | null
 function createWindow () {
   const linuxIcon: string = require('../../../res/1024x1024.png')
   const browerWindowOptions: BrowserWindowConstructorOptions = {
-    width: 800,
-    height: 600,
     backgroundColor: '#E5E5E5',
+    width: 996,
+    height: 600,
     show: false,
-    minWidth: 800,
+    minWidth: 996,
     minHeight: 600
+    // resizable: false,
+    // minimizable: true,
+    // maximizable: false
   }
 
   if (process.platform === 'linux') {

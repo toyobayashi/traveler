@@ -30,7 +30,7 @@
       <span style="flex: 82" class="bold black">{{train.duration}}</span>
       <span style="flex: 49" :class="getClass(train.swz)"
         ><div><div>{{train.swz || '--'}}</div
-        ><div>{{train.spanz}}</div></div></span>
+        ><div>{{train.tdz}}</div></div></span>
       <span style="flex: 49" :class="getClass(train.ydz)">{{train.ydz || '--'}}</span>
       <span style="flex: 49" :class="getClass(train.edz)">{{train.edz || '--'}}</span>
       <span style="flex: 49" :class="getClass(train.gjrw)">{{train.gjrw || '--'}}</span>

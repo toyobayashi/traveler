@@ -34,7 +34,8 @@ export default class extends Vue {
   doOrder (train: Train) {
     const user = this.client.getUser()
     if (!user) {
-      return this.changeStatus('未登录无法预订车票')
+      this.bus.$emit('modal:login')
+      return
     }
     if (!this.stations.length) {
       return this.changeStatus('未获取到站名列表无法预定车票')

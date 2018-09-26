@@ -39,9 +39,19 @@ export default class extends Vue {
     if (!this.stations.length) {
       return this.changeStatus('未获取到站名列表无法预定车票')
     }
-    const passengers = user.passengers
-    console.log(train, this.goDate, getDate(), passengers)
-    // this.client.doOrder(train, this.goDate, getDate(), TODO)
+    // TODO
+    this.changeStatus('暂时不支持下单功能')
+    // TEST
+    let passengers = user.passengers.filter(p => p.passenger_name === 'xxx' || p.passenger_name === 'yyy')
+    passengers = passengers.map(p => {
+      p.seatType = '1' // 硬座
+      return p
+    })
+
+    let testPassengers = passengers
+    console.log(train, this.goDate, getDate(), testPassengers)
+
+    // this.client.doOrder(train, this.goDate, getDate(), testPassengers).then(res => console.log(res)).catch(err => console.log(err))
   }
 
   mounted () {

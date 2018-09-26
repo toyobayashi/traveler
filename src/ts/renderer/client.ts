@@ -28,6 +28,7 @@ export interface PassengerDTO {
   sex_code: string
   sex_name: string
   total_times: string
+  seatType?: string
 }
 
 export interface HttpResponse {
@@ -106,6 +107,102 @@ export interface ResultOrderForDcQueueResponse extends HttpResponse {
   }
 }
 
+export interface QueryMyOrderNoComleteResponse extends HttpResponse {
+  data: {
+    orderDBList: Array<{
+      [x: string]: any
+      array_passser_name_page: string[]
+      arrive_time_page: string
+      canOffLinePay: string
+      cancel_flag: string
+      come_go_traveller_order_page: string
+      confirm_flag: string
+      from_station_name_page: string[]
+      if_deliver: string
+      if_show_resigning_info: string
+      insure_query_no: string
+      isNeedSendMailAndMsg: string
+      order_date: string
+      pay_flag: string
+      pay_resign_flag: string
+      print_eticket_flag: string
+      recordCount: string
+      reserve_flag_query: string
+      resign_flag: string
+      return_flag: string
+      sequence_no: string // 订单号
+      start_time_page: string
+      start_train_date_page: string
+      ticket_price_all: number
+      ticket_total_price_page: string
+      ticket_totalnum: number
+      tickets: Array<{
+        [x: string]: any
+        amount_char: number
+        batch_no: string
+        cancel_flag: string
+        coach_name: string
+        coach_no: string
+        column_nine_msg: string
+        come_go_traveller_ticket_page: string
+        confirm_flag: string
+        deliver_fee_char: string
+        dynamicProp: string
+        fee_char: string
+        insure_query_no: string
+        integral_pay_flag: string
+        is_deliver: string
+        is_need_alert_flag: false
+        lc_flag: string
+        limit_time: string
+        lose_time: string
+        passengerDTO: PassengerDTO
+        pay_limit_time: string
+        pay_mode_code: string
+        print_eticket_flag: string
+        reserve_time: string
+        resign_flag: string
+        return_deliver_flag: string
+        return_flag: string
+        seat_flag: string
+        seat_name: string
+        seat_no: string
+        seat_type_code: string
+        seat_type_name: string
+        sequence_no: string
+        start_train_date_page: string
+        stationTrainDTO: {
+          [x: string]: any
+          arrive_time: string
+          distance: string
+          from_station_name: string
+          from_station_telecode: string
+          start_time: string
+          station_train_code: string
+          to_station_name: string
+          to_station_telecode: string
+          trainDTO: {
+            [x: string]: any
+            train_no: string
+          }
+        }
+        str_ticket_price_page: string
+        ticket_no: string // 票号
+        ticket_price: number
+        ticket_status_code: string
+        ticket_status_name: string
+        ticket_type_code: string
+        ticket_type_name: string
+        trade_mode: string
+        train_date: string
+      }>
+      to_station_name_page: string[]
+      train_code_page: string
+    }>
+    to_page: string
+  }
+}
+
 export interface Station {
   name: string
   code: string
@@ -163,13 +260,15 @@ class Client {
   private static readonly GET_PASSENGER = '/otn/confirmPassenger/getPassengerDTOs'
   private static readonly STATION_NAME = '/otn/resources/js/framework/station_name.js'
   private static readonly LEFT_TICKET = '/otn/leftTicket/queryA'
-  private static readonly SUBMIT_ORDER_REQUEST = '/leftTicket/submitOrderRequest'
+  private static readonly SUBMIT_ORDER_REQUEST = '/otn/leftTicket/submitOrderRequest'
   private static readonly INIT_DC = '/otn/confirmPassenger/initDc'
   private static readonly CHECK_ORDER_INFO = '/otn/confirmPassenger/checkOrderInfo'
   private static readonly GET_QUEUE_COUNT = '/otn/confirmPassenger/getQueueCount'
   private static readonly CONFIRM_SINGLE_FOR_QUEUE = '/otn/confirmPassenger/confirmSingleForQueue'
   private static readonly QUERY_ORDER_WAIT_TIME = '/otn/confirmPassenger/queryOrderWaitTime'
   private static readonly RESULT_ORDER_FOR_DC_QUEUE = '/otn/confirmPassenger/resultOrderForDcQueue'
+  private static readonly QUERY_MY_ORDER_NO_COMPLETE = '/otn/queryOrder/queryMyOrderNoComplete'
+  private static readonly CANCEL_NO_COMPLETE_MY_ORDER = '/otn/queryOrder/cancelNoCompleteMyOrder'
 
   private _user: User = null
   private _stationName: Station[] = []
@@ -467,6 +566,10 @@ class Client {
     return request<SubmitOrderResponse>({
       method: 'POST',
       url: Client.SUBMIT_ORDER_REQUEST,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
       form: {
         secretStr,
         train_date: trainDate,
@@ -485,11 +588,14 @@ class Client {
       url: Client.INIT_DC
     })).data
 
-    console.log(htmlStr)
-    const matchArr = htmlStr.match(/globalRepeatSubmitToken\s*=\s*['"](.*)['"]/)
-    if (!matchArr) throw new Error('正则匹配失败，请检查是否登录')
-    const globalRepeatSubmitToken = matchArr[1]
-    return globalRepeatSubmitToken
+    // console.log(htmlStr)
+    const matchGlobalRepeatSubmitToken = htmlStr.match(/globalRepeatSubmitToken\s*=\s*['"](.*)['"]/)
+    const matchticketInfoForPassengerForm = htmlStr.match(/ticketInfoForPassengerForm\s*=\s*({.*})\s*;/)
+    if (!matchGlobalRepeatSubmitToken || !matchticketInfoForPassengerForm) throw new Error('正则匹配失败，请检查是否登录')
+
+    const globalRepeatSubmitToken = matchGlobalRepeatSubmitToken[1]
+    const keyCheckIsChange = JSON.parse(matchticketInfoForPassengerForm[1].replace(/'/g, '"')).key_check_isChange
+    return [globalRepeatSubmitToken, keyCheckIsChange]
   }
 
   private _checkOrderInfo (repeatSubmitToken: string,
@@ -503,6 +609,10 @@ class Client {
     return request<CheckOrderInfoResponse>({
       method: 'POST',
       url: Client.CHECK_ORDER_INFO,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
       form: {
         cancel_flag: cancelFlag,
         bed_level_order_num: bedLevelOrderNum,
@@ -526,6 +636,10 @@ class Client {
     return request<GetQueueCountResponse>({
       method: 'POST',
       url: Client.GET_QUEUE_COUNT,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
       form: {
         train_date: currentDate.toString(),
         train_no: train.trainNo,
@@ -554,6 +668,10 @@ class Client {
     return request<ConfirmSingleForQueueResponse>({
       method: 'POST',
       url: Client.CONFIRM_SINGLE_FOR_QUEUE,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
       form: {
         passengerTicketStr: passengerTicketStr,
         oldPassengerStr: oldPassengerStr,
@@ -590,12 +708,62 @@ class Client {
     return request<ResultOrderForDcQueueResponse>({
       method: 'POST',
       url: Client.RESULT_ORDER_FOR_DC_QUEUE,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
       form: {
         orderSequence_no: orderId,
         _json_att: jsonAtt,
         REPEAT_SUBMIT_TOKEN: repeatSubmitToken
       }
     })
+  }
+
+  public async queryMyOrderNoComlete (jsonAtt: string = '') {
+    try {
+      const queryMyOrderNoComleteResult = (await request<QueryMyOrderNoComleteResponse>({
+        method: 'POST',
+        url: Client.QUERY_MY_ORDER_NO_COMPLETE,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        form: {
+          _json_att: jsonAtt
+        }
+      })).data
+
+      if (!queryMyOrderNoComleteResult.status) return res(new Error(queryMyOrderNoComleteResult.messages[0]), [])
+      return res(null, queryMyOrderNoComleteResult.data.orderDBList)
+
+    } catch (err) {
+      return res(err, [])
+    }
+  }
+
+  public async cancelNoCompleteMyOrder (orderId: string, cancelFlag: string = 'cancel_order', jsonAtt: string = '') {
+    try {
+      const cancelNoCompleteMyOrderResult = (await request<any>({
+        method: 'POST',
+        url: Client.CANCEL_NO_COMPLETE_MY_ORDER,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        form: {
+          sequence_no: orderId,
+          cancel_flag: cancelFlag,
+          _json_att: jsonAtt
+        }
+      })).data
+
+      if (!cancelNoCompleteMyOrderResult.status) return res(new Error(cancelNoCompleteMyOrderResult.messages[0]), false)
+      return res(null, true)
+
+    } catch (err) {
+      return res(err, false)
+    }
   }
 
   /**
@@ -605,7 +773,7 @@ class Client {
    * @param backTrainDate 当前查询日期或返程日期
    * @param passengers 乘车人数组
    */
-  public async doOrder (train: Train, trainDate: string, backTrainDate: string, passengers: Array<PassengerDTO & { seatType: string }>) {
+  public async doOrder (train: Train, trainDate: string, backTrainDate: string, passengers: PassengerDTO[]) {
 
     let fromName: string = ''
     let toName: string = ''
@@ -617,7 +785,8 @@ class Client {
 
     let submitOrderResult: SubmitOrderResponse
     try {
-      submitOrderResult = (await this._submitOrderRequest(train.secret, trainDate, backTrainDate, fromName, toName)).data
+      let tmp = await this._submitOrderRequest(decodeURIComponent(train.secret), trainDate, backTrainDate, fromName, toName)
+      submitOrderResult = tmp.data
     } catch (err) {
       return res(err, '')
     }
@@ -626,13 +795,13 @@ class Client {
 
     if (!submitOrderResult.status) return res(new Error('提交订单请求失败。' + submitOrderResult.messages[0]), '')
 
-    let globalRepeatSubmitToken: string = submitOrderResult.data.orderToken
-    if (!globalRepeatSubmitToken) {
-      try {
-        globalRepeatSubmitToken = await this._getGlobalRepeatSubmitToken()
-      } catch (err) {
-        return res(err, '')
-      }
+    let globalRepeatSubmitToken: string = ''
+    let keyCheckIsChange: string = ''
+
+    try {
+      [globalRepeatSubmitToken, keyCheckIsChange] = await this._getGlobalRepeatSubmitToken()
+    } catch (err) {
+      return res(err, '')
     }
 
     let passengerTicketStr: string[] = []
@@ -668,7 +837,7 @@ class Client {
 
     let getQueueCountResult: GetQueueCountResponse
     try {
-      getQueueCountResult = (await this._getQueueCount(globalRepeatSubmitToken, train, trainDate, passengers[0].seatType)).data
+      getQueueCountResult = (await this._getQueueCount(globalRepeatSubmitToken, train, trainDate, passengers[0].seatType || '1')).data
     } catch (err) {
       return res(err, '')
     }
@@ -677,7 +846,7 @@ class Client {
 
     let confirmSingleForQueueResult: ConfirmSingleForQueueResponse
     try {
-      confirmSingleForQueueResult = (await this._confirmSingleForQueue(globalRepeatSubmitToken, train, passengerTicketStr.join('_'), oldPassengerStr.join(''), submitOrderResult.data.orderKey)).data
+      confirmSingleForQueueResult = (await this._confirmSingleForQueue(globalRepeatSubmitToken, train, passengerTicketStr.join('_'), oldPassengerStr.join(''), keyCheckIsChange)).data
     } catch (err) {
       return res(err, '')
     }

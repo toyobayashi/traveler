@@ -15,7 +15,7 @@ import { getDate } from './util'
 export default class extends Vue {
   from: string = ''
   to: string = ''
-  // goDate: string = getDate()
+
   queryBtnDisabled: boolean = false
   @Prop({ default: [] }) stations: Station[]
   @Prop({ default: getDate() }) value: string
@@ -38,14 +38,14 @@ export default class extends Vue {
       if (this.stations[i].name === this.to) toCode = this.stations[i].code
     }
 
+    this.bus.$emit('setTableData', [])
     this.queryBtnDisabled = true
     this.changeStatus('查询余票中')
     console.log(this.goDate)
     let res = await this.client.leftTicket(fromCode, toCode, this.goDate)
     this.queryBtnDisabled = false
     if (res.err) {
-      this.changeStatus('查询余票失败')
-      this.bus.$emit('setTableData', [])
+      this.changeStatus('查询余票失败。' + res.err.message)
       console.log(res.err)
     } else {
       this.changeStatus('已就绪')

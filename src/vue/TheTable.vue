@@ -21,7 +21,7 @@
   <div class="table-body">
     <div class="table-line" v-for="train in data" :key="train.code">
       <span style="flex: 90;font-size: 16px" class=" black bold">{{train.code}}</span>
-      <span style="flex: 100" class=" black bold"
+      <span style="flex: 100" class="black bold"
         ><div><div class="black">{{getStationName(train.fromCode)}}</div
         ><div>{{getStationName(train.toCode)}}</div></div></span>
       <span style="flex: 82;font-size: 14px" class=" bold"
@@ -31,17 +31,17 @@
       <span style="flex: 49" class="" :class="getClass(train.swz)"
         ><div><div class="black">{{train.swz || '--'}}</div
         ><div>{{train.spanz}}</div></div></span>
-      <span style="flex: 49" class="" :class="getClass(train.ydz)">{{train.ydz || '--'}}</span>
-      <span style="flex: 49" class="" :class="getClass(train.edz)">{{train.edz || '--'}}</span>
-      <span style="flex: 49" class="" :class="getClass(train.gjrw)">{{train.gjrw || '--'}}</span>
-      <span style="flex: 49" class="" :class="getClass(train.rw)">{{train.rw || '--'}}</span>
-      <span style="flex: 49" class="" :class="getClass(train.dw)">{{train.dw || '--'}}</span>
-      <span style="flex: 49" class="" :class="getClass(train.yw)">{{train.yw || '--'}}</span>
-      <span style="flex: 49" class="" :class="getClass(train.rz)">{{train.rz || '--'}}</span>
-      <span style="flex: 49" class="" :class="getClass(train.yz)">{{train.yz || '--'}}</span>
-      <span style="flex: 49" class="" :class="getClass(train.wz)">{{train.wz || '--'}}</span>
-      <span style="flex: 49" class="" :class="getClass(train.qt)">{{train.qt || '--'}}</span>
-      <span style="flex: 85" class="">{{train.remark}}</span>
+      <span style="flex: 49" :class="getClass(train.ydz)">{{train.ydz || '--'}}</span>
+      <span style="flex: 49" :class="getClass(train.edz)">{{train.edz || '--'}}</span>
+      <span style="flex: 49" :class="getClass(train.gjrw)">{{train.gjrw || '--'}}</span>
+      <span style="flex: 49" :class="getClass(train.rw)">{{train.rw || '--'}}</span>
+      <span style="flex: 49" :class="getClass(train.dw)">{{train.dw || '--'}}</span>
+      <span style="flex: 49" :class="getClass(train.yw)">{{train.yw || '--'}}</span>
+      <span style="flex: 49" :class="getClass(train.rz)">{{train.rz || '--'}}</span>
+      <span style="flex: 49" :class="getClass(train.yz)">{{train.yz || '--'}}</span>
+      <span style="flex: 49" :class="getClass(train.wz)">{{train.wz || '--'}}</span>
+      <span style="flex: 49" :class="getClass(train.qt)">{{train.qt || '--'}}</span>
+      <span style="flex: 85"><Button color="default" @click.native="doOrder(train)">{{train.remark}}</Button></span>
     </div>
   </div>
 

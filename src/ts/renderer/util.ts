@@ -1,5 +1,5 @@
-export function getDate (): string {
-  const t = new Date()
+export function getDate (t?: Date): string {
+  if (!t) t = new Date()
   const y = t.getFullYear()
   const m = t.getMonth() + 1
   const d = t.getDate()
@@ -9,4 +9,10 @@ export function getDate (): string {
 export function getDays (yearAndMonth: string): number {
   const [year, month] = yearAndMonth.split('-')
   return new Date(Number(year), Number(month), 0).getDate()
+}
+
+export function sleep (ms: number) {
+  return new Promise<void>(resolve => {
+    setTimeout(resolve, ms)
+  })
 }

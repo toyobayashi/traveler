@@ -1,8 +1,8 @@
 <template>
 <div class="root" id="root">
   <TheHeader :user="client.getUser()" :status="status" />
-  <TheSearchBar :stations="stationName"/>
-  <TheTable :stations="stationName"/>
+  <TheSearchBar :stations="stationName" v-model="goDate"/>
+  <TheTable :stations="stationName" :goDate="goDate"/>
   <ModalLogin :width="400" />
 </div>
 </template>

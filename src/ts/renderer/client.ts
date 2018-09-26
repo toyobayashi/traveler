@@ -1,4 +1,5 @@
 import request from './request'
+import { sleep } from './util'
 
 export interface ResponseData {
   result_code: string | number
@@ -29,12 +30,16 @@ export interface PassengerDTO {
   total_times: string
 }
 
-export interface PassengerResponse {
+export interface HttpResponse {
   httpstatus: number
   status: boolean
   validateMessages: any
   validateMessagesShowId: string
   messages: any[]
+  data: any
+}
+
+export interface PassengerResponse extends HttpResponse {
   data: {
     dj_passengers: any[] | null
     exMsg: string
@@ -46,12 +51,98 @@ export interface PassengerResponse {
   }
 }
 
+export interface SubmitOrderResponse extends HttpResponse {
+  data: any
+}
+
+export interface CheckOrderInfoResponse extends HttpResponse {
+  data: {
+    ifShowPassCode: string
+    ifShowPassCodeTime: string
+    canChooseBeds: string
+    canChooseSeats: string
+    choose_Seats: string
+    isCanChooseMid: string
+    submitStatus: boolean
+    smokeStr: string
+    errMsg?: string
+  }
+}
+
+export interface GetQueueCountResponse extends HttpResponse {
+  data: {
+    count: string
+    ticket: string
+    op_2: string
+    countT: string
+    op_1: string
+  }
+}
+
+export interface ConfirmSingleForQueueResponse extends HttpResponse {
+  data: {
+    submitStatus: boolean
+    errMsg?: string
+  }
+}
+
+export interface QueryOrderWaitTimeResponse extends HttpResponse {
+  data: {
+    queryOrderWaitTimeStatus: boolean
+    count: number
+    waitTime: number
+    requestId: number
+    waitCount: number
+    tourFlag: string
+    orderId: string | null
+    errMsg?: string
+  }
+}
+
+export interface ResultOrderForDcQueueResponse extends HttpResponse {
+  data: {
+    submitStatus: boolean
+    errMsg?: string
+  }
+}
+
 export interface Station {
   name: string
   code: string
   fullSpelling: string
   initialSpelling: string
   index: number
+}
+
+export interface Train {
+  secret: string
+  code: string
+  seatTypes: string
+  type: string
+  trainNo: string
+  fromCode: string
+  toCode: string
+  fromTime: string
+  toTime: string
+  duration: string
+  status: boolean
+  ypInfo: string
+  locationCode: string
+  remark: string
+  gjdw?: string
+  dw?: string
+  swz?: string
+  tdz?: string
+  ydbz?: string
+  ydz?: string
+  edz?: string
+  gjrw?: string
+  rw?: string
+  yw?: string
+  rz?: string
+  yz?: string
+  wz?: string
+  qt?: string
 }
 
 const res = <T = any>(err: Error | null, data: T) => ({ err, data })
@@ -63,17 +154,25 @@ export type User = {
 } | null
 
 class Client {
-  private static CAPTCHA_IMAGE = () => `/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&${Math.random()}`
-  private static CAPTCHA_CHECK = '/passport/captcha/captcha-check'
-  private static LOGIN = '/passport/web/login'
-  private static AUTH_UAMTK = '/passport/web/auth/uamtk'
-  private static AUTH_CLIENT = '/otn/uamauthclient'
-  private static LOGOUT = '/otn/login/loginOut'
-  private static GET_PASSENGER = '/otn/confirmPassenger/getPassengerDTOs'
-  private static STATION_NAME = '/otn/resources/js/framework/station_name.js'
-  private static LEFT_TICKET = '/otn/leftTicket/queryA'
+  private static readonly CAPTCHA_IMAGE = () => `/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&${Math.random()}`
+  private static readonly CAPTCHA_CHECK = '/passport/captcha/captcha-check'
+  private static readonly LOGIN = '/passport/web/login'
+  private static readonly AUTH_UAMTK = '/passport/web/auth/uamtk'
+  private static readonly AUTH_CLIENT = '/otn/uamauthclient'
+  private static readonly LOGOUT = '/otn/login/loginOut'
+  private static readonly GET_PASSENGER = '/otn/confirmPassenger/getPassengerDTOs'
+  private static readonly STATION_NAME = '/otn/resources/js/framework/station_name.js'
+  private static readonly LEFT_TICKET = '/otn/leftTicket/queryA'
+  private static readonly SUBMIT_ORDER_REQUEST = '/leftTicket/submitOrderRequest'
+  private static readonly INIT_DC = '/otn/confirmPassenger/initDc'
+  private static readonly CHECK_ORDER_INFO = '/otn/confirmPassenger/checkOrderInfo'
+  private static readonly GET_QUEUE_COUNT = '/otn/confirmPassenger/getQueueCount'
+  private static readonly CONFIRM_SINGLE_FOR_QUEUE = '/otn/confirmPassenger/confirmSingleForQueue'
+  private static readonly QUERY_ORDER_WAIT_TIME = '/otn/confirmPassenger/queryOrderWaitTime'
+  private static readonly RESULT_ORDER_FOR_DC_QUEUE = '/otn/confirmPassenger/resultOrderForDcQueue'
 
   private _user: User = null
+  private _stationName: Station[] = []
 
   public getUser () {
     return this._user
@@ -206,6 +305,7 @@ class Client {
           'passengerDTO.passenger_name': passengerName
         }
       })).data
+      if (typeof passengerResult.data !== 'object') return res(new Error('获取乘客失败'), [])
       if (!passengerResult.data.normal_passengers) {
         return res(new Error(passengerResult.data.exMsg), [])
       } else {
@@ -213,7 +313,7 @@ class Client {
         return res(null, passengerResult.data.normal_passengers)
       }
     } catch (err) {
-      return res(err, null)
+      return res(err, [])
     }
   }
 
@@ -235,6 +335,7 @@ class Client {
         objectStasions[i] = { name, code, fullSpelling, initialSpelling, index: Number(index) }
       }
 
+      if (!this._stationName.length) this._stationName = objectStasions
       return res(null, objectStasions)
     } catch (err) {
       return res(err, null)
@@ -268,13 +369,13 @@ class Client {
 
       if (!leftTicketResult.data.result || !leftTicketResult.data.result.length) return res(null, [])
 
-      const result = []
+      const result: Train[] = []
       for (let i = 0; i < leftTicketResult.data.result.length; i++) {
         const dataArr = leftTicketResult.data.result[i].split('|')
         const code = dataArr[3]
         const seatTypes = dataArr[35]
 
-        const train: any = {
+        const train: Train = {
           secret: dataArr[0],
           code,
           seatTypes,
@@ -344,6 +445,282 @@ class Client {
     } catch (err) {
       return res(err, null)
     }
+  }
+
+  /**
+   * 请求下单
+   * @param secretStr decodeURIComponent(车次[0])
+   * @param trainDate 出发日期 格式：2018-09-26
+   * @param backTrainDate 当前查询日期或返程日期
+   * @param queryFromStationName 出发站中文名
+   * @param queryToStationName 到达站中文名
+   * @param purposeCodes 默认成人票ADULT，学生票0X00
+   * @param tourFlag 默认单程dc，往返wc
+   */
+  private _submitOrderRequest (secretStr: string,
+                               trainDate: string,
+                               backTrainDate: string,
+                               queryFromStationName: string,
+                               queryToStationName: string,
+                               purposeCodes: string = 'ADULT',
+                               tourFlag: string = 'dc') {
+    return request<SubmitOrderResponse>({
+      method: 'POST',
+      url: Client.SUBMIT_ORDER_REQUEST,
+      form: {
+        secretStr,
+        train_date: trainDate,
+        back_train_date: backTrainDate,
+        tour_flag: tourFlag,
+        purpose_codes: purposeCodes,
+        query_from_station_name: queryFromStationName,
+        query_to_station_name: queryToStationName
+      }
+    })
+  }
+
+  private async _getGlobalRepeatSubmitToken () {
+    const htmlStr = (await request<string>({
+      method: 'GET',
+      url: Client.INIT_DC
+    })).data
+
+    console.log(htmlStr)
+    const matchArr = htmlStr.match(/globalRepeatSubmitToken\s*=\s*['"](.*)['"]/)
+    if (!matchArr) throw new Error('正则匹配失败，请检查是否登录')
+    const globalRepeatSubmitToken = matchArr[1]
+    return globalRepeatSubmitToken
+  }
+
+  private _checkOrderInfo (repeatSubmitToken: string,
+                           passengerTicketStr: string,
+                           oldPassengerStr: string,
+                           tourFlag: string = 'dc',
+                           randCode: string = '',
+                           jsonAtt: string = '',
+                           cancelFlag: any = '2',
+                           bedLevelOrderNum: string = '000000000000000000000000000000') {
+    return request<CheckOrderInfoResponse>({
+      method: 'POST',
+      url: Client.CHECK_ORDER_INFO,
+      form: {
+        cancel_flag: cancelFlag,
+        bed_level_order_num: bedLevelOrderNum,
+        passengerTicketStr,
+        oldPassengerStr,
+        tour_flag: tourFlag,
+        randCode,
+        _json_att: jsonAtt,
+        REPEAT_SUBMIT_TOKEN: repeatSubmitToken,
+        whatsSelect: '1'
+      }
+    })
+  }
+
+  private _getQueueCount (repeatSubmitToken: string, train: Train, trainDate: string, seatType: string, purposeCodes: string = '00', jsonAtt: string = '') {
+    const currentDate = new Date()
+    const arrDate = trainDate.split('-')
+
+    currentDate.setFullYear(Number(arrDate[0]), Number(arrDate[1]) - 1, Number(arrDate[2]))
+
+    return request<GetQueueCountResponse>({
+      method: 'POST',
+      url: Client.GET_QUEUE_COUNT,
+      form: {
+        train_date: currentDate.toString(),
+        train_no: train.trainNo,
+        stationTrainCode: train.code,
+        seatType: seatType,
+        fromStationTelecode: train.fromCode,
+        toStationTelecode: train.toCode,
+        leftTicket: train.ypInfo,
+        train_location: train.locationCode,
+        REPEAT_SUBMIT_TOKEN: repeatSubmitToken,
+        purpose_codes: purposeCodes,
+        _json_att: jsonAtt
+      }
+    })
+  }
+
+  private _confirmSingleForQueue (repeatSubmitToken: string,
+                                  train: Train,
+                                  passengerTicketStr: string,
+                                  oldPassengerStr: string,
+                                  key: string,
+                                  chooseSeats: string = '',
+                                  randCode: string = '',
+                                  purposeCodes: string = '00',
+                                  jsonAtt: string = '') {
+    return request<ConfirmSingleForQueueResponse>({
+      method: 'POST',
+      url: Client.CONFIRM_SINGLE_FOR_QUEUE,
+      form: {
+        passengerTicketStr: passengerTicketStr,
+        oldPassengerStr: oldPassengerStr,
+        randCode: randCode,
+        purpose_codes: purposeCodes,
+        key_check_isChange: key,
+        leftTicketStr: train.ypInfo,
+        train_location: train.locationCode,
+        choose_seats: chooseSeats,
+        seatDetailType: '',
+        whatsSelect: '1',
+        roomType: '00',
+        dwAll: 'N',
+        _json_att: jsonAtt,
+        REPEAT_SUBMIT_TOKEN: repeatSubmitToken
+      }
+    })
+  }
+
+  private _queryOrderWaitTime (repeatSubmitToken: string, tourFlag: string = 'dc', jsonAtt: string = '') {
+    return request<QueryOrderWaitTimeResponse>({
+      method: 'GET',
+      url: Client.QUERY_ORDER_WAIT_TIME,
+      qs: {
+        random: (new Date()).getTime().toString(),
+        tourFlag,
+        _json_att: jsonAtt,
+        REPEAT_SUBMIT_TOKEN: repeatSubmitToken
+      }
+    })
+  }
+
+  private _resultOrderForDcQueue (repeatSubmitToken: string, orderId: string, jsonAtt: string = '') {
+    return request<ResultOrderForDcQueueResponse>({
+      method: 'POST',
+      url: Client.RESULT_ORDER_FOR_DC_QUEUE,
+      form: {
+        orderSequence_no: orderId,
+        _json_att: jsonAtt,
+        REPEAT_SUBMIT_TOKEN: repeatSubmitToken
+      }
+    })
+  }
+
+  /**
+   * 下单
+   * @param train 车次对象
+   * @param trainDate 出发日期字符串
+   * @param backTrainDate 当前查询日期或返程日期
+   * @param passengers 乘车人数组
+   */
+  public async doOrder (train: Train, trainDate: string, backTrainDate: string, passengers: Array<PassengerDTO & { seatType: string }>) {
+
+    let fromName: string = ''
+    let toName: string = ''
+    for (let i = 0; i < this._stationName.length; i++) {
+      if (fromName && toName) break
+      if (this._stationName[i].code === train.fromCode) fromName = this._stationName[i].name
+      if (this._stationName[i].code === train.toCode) toName = this._stationName[i].name
+    }
+
+    let submitOrderResult: SubmitOrderResponse
+    try {
+      submitOrderResult = (await this._submitOrderRequest(train.secret, trainDate, backTrainDate, fromName, toName)).data
+    } catch (err) {
+      return res(err, '')
+    }
+    console.log('SubmitOrder')
+    console.log(submitOrderResult)
+
+    if (!submitOrderResult.status) return res(new Error('提交订单请求失败。' + submitOrderResult.messages[0]), '')
+
+    let globalRepeatSubmitToken: string = submitOrderResult.data.orderToken
+    if (!globalRepeatSubmitToken) {
+      try {
+        globalRepeatSubmitToken = await this._getGlobalRepeatSubmitToken()
+      } catch (err) {
+        return res(err, '')
+      }
+    }
+
+    let passengerTicketStr: string[] = []
+    let oldPassengerStr: string[] = []
+    for (let i = 0; i < passengers.length; i++) {
+      const passenger = passengers[i]
+      passengerTicketStr.push(
+        `${passenger.seatType
+        },0,${passenger.passenger_type
+        },${passenger.passenger_name
+        },${passenger.passenger_id_type_code
+        },${passenger.passenger_id_no
+        },${passenger.mobile_no},N`
+      )
+      oldPassengerStr.push(
+        `${passenger.passenger_name
+        },${passenger.passenger_id_type_code
+        },${passenger.passenger_id_no
+        },${passenger.passenger_type}_`
+      )
+    }
+
+    let checkOrderInfoResult: CheckOrderInfoResponse
+    try {
+      checkOrderInfoResult = (await this._checkOrderInfo(globalRepeatSubmitToken, passengerTicketStr.join('_'), oldPassengerStr.join(''))).data
+    } catch (err) {
+      return res(err, '')
+    }
+    if (!checkOrderInfoResult.status) return res(new Error('提交订单请求失败。' + checkOrderInfoResult.messages[0]), '')
+    if (!checkOrderInfoResult.data.submitStatus) return res(new Error(checkOrderInfoResult.data.errMsg), '')
+    console.log('CheckOrderInfo')
+    console.log(checkOrderInfoResult)
+
+    let getQueueCountResult: GetQueueCountResponse
+    try {
+      getQueueCountResult = (await this._getQueueCount(globalRepeatSubmitToken, train, trainDate, passengers[0].seatType)).data
+    } catch (err) {
+      return res(err, '')
+    }
+    console.log('GetQueueCount')
+    console.log(getQueueCountResult)
+
+    let confirmSingleForQueueResult: ConfirmSingleForQueueResponse
+    try {
+      confirmSingleForQueueResult = (await this._confirmSingleForQueue(globalRepeatSubmitToken, train, passengerTicketStr.join('_'), oldPassengerStr.join(''), submitOrderResult.data.orderKey)).data
+    } catch (err) {
+      return res(err, '')
+    }
+    if (!confirmSingleForQueueResult.status) return res(new Error('提交订单请求失败。' + confirmSingleForQueueResult.messages[0]), '')
+    if (!confirmSingleForQueueResult.data.submitStatus) return res(new Error(confirmSingleForQueueResult.data.errMsg), '')
+    console.log('ConfirmSingleForQueue')
+    console.log(confirmSingleForQueueResult)
+
+    let orderId = ''
+    while (true) {
+      let queryOrderWaitTimeResule: QueryOrderWaitTimeResponse
+      try {
+        queryOrderWaitTimeResule = (await this._queryOrderWaitTime(globalRepeatSubmitToken)).data
+      } catch (err) {
+        console.log(err)
+        await sleep(3000)
+        continue
+      }
+      console.log('QueryOrderWaitTime')
+      console.log(queryOrderWaitTimeResule)
+
+      if (!queryOrderWaitTimeResule.status) {
+        await sleep(3000)
+        continue
+      }
+      if (!queryOrderWaitTimeResule.data.orderId) {
+        await sleep(3000)
+        continue
+      } else {
+        orderId = queryOrderWaitTimeResule.data.orderId
+        break
+      }
+    }
+
+    let resultOrderForDcQueueResult: ResultOrderForDcQueueResponse
+    try {
+      resultOrderForDcQueueResult = (await this._resultOrderForDcQueue(globalRepeatSubmitToken, orderId)).data
+    } catch (err) {
+      return res(err, orderId)
+    }
+    if (!resultOrderForDcQueueResult.status) return res(new Error('订单确认失败'), orderId)
+    if (!resultOrderForDcQueueResult.data.submitStatus) return res(new Error('订单确认失败。' + resultOrderForDcQueueResult.data.errMsg), orderId)
+    return res(null, orderId)
   }
 }
 

@@ -4,6 +4,7 @@ import ModalLogin from '../../vue/ModalLogin.vue'
 import TheSearchBar from '../../vue/TheSearchBar.vue'
 import TheTable from '../../vue/TheTable.vue'
 import Client, { Station } from './client'
+import { getDate } from './util'
 
 @Component({
   components: {
@@ -17,6 +18,7 @@ export default class extends Vue {
   client: Client = this.client
   status: string = '已就绪'
   stationName: Station[] = []
+  goDate: string = getDate()
   mounted () {
     this.$nextTick(() => {
       this.status = '正在获取车站'

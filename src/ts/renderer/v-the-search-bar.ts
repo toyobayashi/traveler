@@ -15,9 +15,19 @@ import { getDate } from './util'
 export default class extends Vue {
   from: string = ''
   to: string = ''
-  goDate: string = getDate()
+  // goDate: string = getDate()
   queryBtnDisabled: boolean = false
   @Prop({ default: [] }) stations: Station[]
+  @Prop({ default: getDate() }) value: string
+
+  get goDate () {
+    return this.value
+  }
+
+  goDateChange (value: string) {
+    this.$emit('input', value)
+    this.bus.$emit('setTableData', [])
+  }
 
   async query () {
     let fromCode: string = ''
@@ -28,13 +38,9 @@ export default class extends Vue {
       if (this.stations[i].name === this.to) toCode = this.stations[i].code
     }
 
-    // const trainDate = this.goDate.split('/').map((v, i) => {
-    //   if (i === 0) return v
-    //   return v.length > 1 ? v : '0' + v
-    // }).join('-')
-
     this.queryBtnDisabled = true
     this.changeStatus('查询余票中')
+    console.log(this.goDate)
     let res = await this.client.leftTicket(fromCode, toCode, this.goDate)
     this.queryBtnDisabled = false
     if (res.err) {

@@ -1,5 +1,5 @@
 import request from './request'
-import { sleep } from './util'
+import { sleep, parseStationName, seatTypeMap } from './util'
 
 export interface ResponseData {
   result_code: string | number
@@ -421,16 +421,6 @@ class Client {
     }
   }
 
-  private _parseStationName (stationNameString: string) {
-    const stringStations = stationNameString.split('@').slice(1)
-    const objectStasions: Station[] = []
-    for (let i = 0; i < stringStations.length; i++) {
-      const [, name, code, fullSpelling, initialSpelling, index] = stringStations[i].split('|')
-      objectStasions[i] = { name, code, fullSpelling, initialSpelling, index: Number(index) }
-    }
-    return objectStasions
-  }
-
   public async updateStationName () {
     try {
       const jsCode = (await request<string>({
@@ -443,7 +433,7 @@ class Client {
       const jsString = matchResult[1]
       localStorage.setItem('travelerStationName', jsString)
 
-      const objectStasions = this._parseStationName(jsString)
+      const objectStasions = parseStationName(jsString)
 
       this._stationName = objectStasions
       return res(null, objectStasions)
@@ -455,7 +445,7 @@ class Client {
   public getStationName () {
     const travelerStationName = localStorage.getItem('travelerStationName')
     if (travelerStationName) {
-      const objectStasions = this._parseStationName(travelerStationName)
+      const objectStasions = parseStationName(travelerStationName)
       if (!this._stationName.length) this._stationName = objectStasions
       return Promise.resolve(res(null, objectStasions))
     }
@@ -467,10 +457,6 @@ class Client {
     try {
       const leftTicketResult = (await request<any>({
         method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
         url: Client.LEFT_TICKET,
         qs: {
           'leftTicketDTO.train_date': trainDate,
@@ -514,49 +500,20 @@ class Client {
         }
 
         for (let j = 0; j < seatTypes.length; j++) {
-          switch (seatTypes[j]) {
-            case 'A': // 高级动卧
-              if (!train.gjdw) train.gjdw = dataArr[20]
-              break
-            case 'F': // 动卧
-              if (!train.dw) train.dw = dataArr[33]
-              break
-            case '9': // 商务座
-              if (!train.swz) train.swz = dataArr[32]
-              break
-            case 'P': // 特等座
-              if (!train.tdz) train.tdz = dataArr[25]
-              break
-            case 'S': // 一等包座
-              if (!train.ydbz) train.ydbz = dataArr[27]
-              break
-            case 'M': // 一等座
-              if (!train.ydz) train.ydz = dataArr[31]
-              break
-            case 'O': // 二等座
-              if (!train.edz) train.edz = dataArr[30]
-              break
-            case '6': // 高级软卧
-              if (!train.gjrw) train.gjrw = dataArr[21]
-              break
-            case '4': // 软卧
-              if (!train.rw) train.rw = dataArr[23]
-              break
-            case '3': // 硬卧
-              if (!train.yw) train.yw = dataArr[28]
-              break
-            case '2': // 软座
-              if (!train.rz) train.rz = dataArr[24]
-              break
-            case '1': // 硬座或无座
+          let type = seatTypes[j]
+          if (seatTypeMap[type]) {
+            if (type === '1') {
               if (!train.yz) train.yz = dataArr[29]
               else train.wz = dataArr[26]
-              break
-            default: // 其他
-              if (!train.qt) train.qt = dataArr[22]
-              break
+            } else {
+              let code = seatTypeMap[type].code
+              if (!train[code]) {
+                train[code] = dataArr[seatTypeMap[type].index]
+              }
+            }
+          } else {
+            if (!train.qt) train.qt = dataArr[22]
           }
-
         }
 
         result.push(train)
@@ -588,10 +545,6 @@ class Client {
     return request<SubmitOrderResponse>({
       method: 'POST',
       url: Client.SUBMIT_ORDER_REQUEST,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
       form: {
         secretStr,
         train_date: trainDate,
@@ -631,10 +584,6 @@ class Client {
     return request<CheckOrderInfoResponse>({
       method: 'POST',
       url: Client.CHECK_ORDER_INFO,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
       form: {
         cancel_flag: cancelFlag,
         bed_level_order_num: bedLevelOrderNum,
@@ -658,10 +607,6 @@ class Client {
     return request<GetQueueCountResponse>({
       method: 'POST',
       url: Client.GET_QUEUE_COUNT,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
       form: {
         train_date: currentDate.toString(),
         train_no: train.trainNo,
@@ -690,10 +635,6 @@ class Client {
     return request<ConfirmSingleForQueueResponse>({
       method: 'POST',
       url: Client.CONFIRM_SINGLE_FOR_QUEUE,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
       form: {
         passengerTicketStr: passengerTicketStr,
         oldPassengerStr: oldPassengerStr,
@@ -730,10 +671,6 @@ class Client {
     return request<ResultOrderForDcQueueResponse>({
       method: 'POST',
       url: Client.RESULT_ORDER_FOR_DC_QUEUE,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
       form: {
         orderSequence_no: orderId,
         _json_att: jsonAtt,
@@ -747,10 +684,6 @@ class Client {
       const queryMyOrderNoComleteResult = (await request<QueryMyOrderNoComleteResponse>({
         method: 'POST',
         url: Client.QUERY_MY_ORDER_NO_COMPLETE,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
         form: {
           _json_att: jsonAtt
         }
@@ -769,10 +702,6 @@ class Client {
       const cancelNoCompleteMyOrderResult = (await request<any>({
         method: 'POST',
         url: Client.CANCEL_NO_COMPLETE_MY_ORDER,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
         form: {
           sequence_no: orderId,
           cancel_flag: cancelFlag,

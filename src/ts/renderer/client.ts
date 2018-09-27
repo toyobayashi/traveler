@@ -74,8 +74,8 @@ export interface GetQueueCountResponse extends HttpResponse {
   data: {
     count: string
     ticket: string
-    op_2: string
-    countT: string
+    op_2: string // 排队人数 是否大于 剩余票数
+    countT: string // 排队人数
     op_1: string
   }
 }
@@ -242,13 +242,18 @@ export interface Train {
   qt?: string
 }
 
-const res = <T = any>(err: Error | null, data: T) => ({ err, data })
-
 export type User = {
   username: string,
   name: string,
   passengers: PassengerDTO[]
 } | null
+
+function res (err: Error, data?: null): { err: Error; data: null }
+function res<T = any> (err: null, data: T): { err: null; data: T }
+
+function res (err: Error | null, data = null) {
+  return { err, data }
+}
 
 class Client {
   private static readonly CAPTCHA_IMAGE = () => `/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&${Math.random()}`
@@ -286,7 +291,7 @@ class Client {
       })
       return res(null, data)
     } catch (err) {
-      return res(err, null)
+      return res(err)
     }
   }
 
@@ -339,28 +344,28 @@ class Client {
       const uamtkResult = (await this._authUAMTK()).data
       if (uamtkResult.result_code !== 0) {
         this._user = null
-        return res(new Error(uamtkResult.result_message), null)
+        return res(new Error(uamtkResult.result_message))
       }
       const authClientResult = (await this._authClient(uamtkResult.newapptk as string)).data
       if (authClientResult.result_code !== 0) {
         this._user = null
-        return res(new Error(authClientResult.result_message), null)
+        return res(new Error(authClientResult.result_message))
       }
       return res(null, {
         apptk: authClientResult.apptk as string,
         username: authClientResult.username as string
       })
     } catch (err) {
-      return res(err, null)
+      return res(err)
     }
   }
 
   public async verify (username: string, password: string, answer: string) {
     try {
       const checkResult = (await this._captchaCheck(answer)).data
-      if (checkResult.result_code !== '4') return res(new Error(checkResult.result_message), null)
+      if (checkResult.result_code !== '4') return res(new Error(checkResult.result_message))
       const loginResult = (await this._login(username, password)).data
-      if (loginResult.result_code !== 0) return res(new Error(loginResult.result_message), null)
+      if (loginResult.result_code !== 0) return res(new Error(loginResult.result_message))
       const authResult = await this.auth()
       if (authResult.data) {
         this._user = {
@@ -371,7 +376,7 @@ class Client {
       }
       return authResult
     } catch (err) {
-      return res(err, null)
+      return res(err)
     }
   }
 
@@ -386,10 +391,10 @@ class Client {
       if (data.result_code === 3) {
         return res(null, data)
       } else {
-        return res(new Error(data.result_message), null)
+        return res(new Error(data.result_message))
       }
     }).catch(err => {
-      return res(err, null)
+      return res(err)
     })
   }
 
@@ -404,19 +409,29 @@ class Client {
           'passengerDTO.passenger_name': passengerName
         }
       })).data
-      if (typeof passengerResult.data !== 'object') return res(new Error('获取乘客失败'), [])
+      if (typeof passengerResult.data !== 'object') return res(new Error('获取乘客失败'))
       if (!passengerResult.data.normal_passengers) {
-        return res(new Error(passengerResult.data.exMsg), [])
+        return res(new Error(passengerResult.data.exMsg))
       } else {
         if (this._user) this._user.passengers = passengerResult.data.normal_passengers
         return res(null, passengerResult.data.normal_passengers)
       }
     } catch (err) {
-      return res(err, [])
+      return res(err)
     }
   }
 
-  public async stationName () {
+  private _parseStationName (stationNameString: string) {
+    const stringStations = stationNameString.split('@').slice(1)
+    const objectStasions: Station[] = []
+    for (let i = 0; i < stringStations.length; i++) {
+      const [, name, code, fullSpelling, initialSpelling, index] = stringStations[i].split('|')
+      objectStasions[i] = { name, code, fullSpelling, initialSpelling, index: Number(index) }
+    }
+    return objectStasions
+  }
+
+  public async updateStationName () {
     try {
       const jsCode = (await request<string>({
         method: 'GET',
@@ -424,21 +439,28 @@ class Client {
       })).data
 
       const matchResult = jsCode.match(/=\s*['"](.*)['"]/)
-      if (!matchResult) return res(new Error('获取站名失败'), null)
+      if (!matchResult) return res(new Error('获取站名失败'))
+      const jsString = matchResult[1]
+      localStorage.setItem('travelerStationName', jsString)
 
-      const str = matchResult[1]
-      const stringStations = str.split('@').slice(1)
-      const objectStasions: Station[] = []
-      for (let i = 0; i < stringStations.length; i++) {
-        const [, name, code, fullSpelling, initialSpelling, index] = stringStations[i].split('|')
-        objectStasions[i] = { name, code, fullSpelling, initialSpelling, index: Number(index) }
-      }
+      const objectStasions = this._parseStationName(jsString)
 
-      if (!this._stationName.length) this._stationName = objectStasions
+      this._stationName = objectStasions
       return res(null, objectStasions)
     } catch (err) {
-      return res(err, null)
+      return res(err)
     }
+  }
+
+  public getStationName () {
+    const travelerStationName = localStorage.getItem('travelerStationName')
+    if (travelerStationName) {
+      const objectStasions = this._parseStationName(travelerStationName)
+      if (!this._stationName.length) this._stationName = objectStasions
+      return Promise.resolve(res(null, objectStasions))
+    }
+
+    return this.updateStationName()
   }
 
   public async leftTicket (fromStation: string, toStation: string, trainDate: string, purposeCodes?: string) {
@@ -459,11 +481,11 @@ class Client {
       })).data
 
       if (typeof leftTicketResult === 'string') {
-        return res(new Error('查询余票失败'), null)
+        return res(new Error('查询余票失败'))
       }
 
       if (leftTicketResult.data.flag !== '1') {
-        return res(new Error('查询余票失败。flag = ' + leftTicketResult.data.flag), null)
+        return res(new Error('查询余票失败。flag = ' + leftTicketResult.data.flag))
       }
 
       if (!leftTicketResult.data.result || !leftTicketResult.data.result.length) return res(null, [])
@@ -542,7 +564,7 @@ class Client {
 
       return res(null, result)
     } catch (err) {
-      return res(err, null)
+      return res(err)
     }
   }
 
@@ -734,11 +756,11 @@ class Client {
         }
       })).data
 
-      if (!queryMyOrderNoComleteResult.status) return res(new Error(queryMyOrderNoComleteResult.messages[0]), [])
+      if (!queryMyOrderNoComleteResult.status) return res(new Error(queryMyOrderNoComleteResult.messages[0]))
       return res(null, queryMyOrderNoComleteResult.data.orderDBList)
 
     } catch (err) {
-      return res(err, [])
+      return res(err)
     }
   }
 
@@ -758,11 +780,11 @@ class Client {
         }
       })).data
 
-      if (!cancelNoCompleteMyOrderResult.status) return res(new Error(cancelNoCompleteMyOrderResult.messages[0]), false)
+      if (!cancelNoCompleteMyOrderResult.status) return res(new Error(cancelNoCompleteMyOrderResult.messages[0]))
       return res(null, true)
 
     } catch (err) {
-      return res(err, false)
+      return res(err)
     }
   }
 
@@ -788,12 +810,12 @@ class Client {
       let tmp = await this._submitOrderRequest(decodeURIComponent(train.secret), trainDate, backTrainDate, fromName, toName)
       submitOrderResult = tmp.data
     } catch (err) {
-      return res(err, '')
+      return res(err)
     }
     console.log('SubmitOrder')
     console.log(submitOrderResult)
 
-    if (!submitOrderResult.status) return res(new Error('提交订单请求失败。' + submitOrderResult.messages[0]), '')
+    if (!submitOrderResult.status) return res(new Error('提交订单请求失败。' + submitOrderResult.messages[0]))
 
     let globalRepeatSubmitToken: string = ''
     let keyCheckIsChange: string = ''
@@ -801,7 +823,7 @@ class Client {
     try {
       [globalRepeatSubmitToken, keyCheckIsChange] = await this._getGlobalRepeatSubmitToken()
     } catch (err) {
-      return res(err, '')
+      return res(err)
     }
 
     let passengerTicketStr: string[] = []
@@ -828,10 +850,10 @@ class Client {
     try {
       checkOrderInfoResult = (await this._checkOrderInfo(globalRepeatSubmitToken, passengerTicketStr.join('_'), oldPassengerStr.join(''))).data
     } catch (err) {
-      return res(err, '')
+      return res(err)
     }
-    if (!checkOrderInfoResult.status) return res(new Error('提交订单请求失败。' + checkOrderInfoResult.messages[0]), '')
-    if (!checkOrderInfoResult.data.submitStatus) return res(new Error(checkOrderInfoResult.data.errMsg), '')
+    if (!checkOrderInfoResult.status) return res(new Error('提交订单请求失败。' + checkOrderInfoResult.messages[0]))
+    if (!checkOrderInfoResult.data.submitStatus) return res(new Error(checkOrderInfoResult.data.errMsg))
     console.log('CheckOrderInfo')
     console.log(checkOrderInfoResult)
 
@@ -839,7 +861,7 @@ class Client {
     try {
       getQueueCountResult = (await this._getQueueCount(globalRepeatSubmitToken, train, trainDate, passengers[0].seatType || '1')).data
     } catch (err) {
-      return res(err, '')
+      return res(err)
     }
     console.log('GetQueueCount')
     console.log(getQueueCountResult)
@@ -848,10 +870,10 @@ class Client {
     try {
       confirmSingleForQueueResult = (await this._confirmSingleForQueue(globalRepeatSubmitToken, train, passengerTicketStr.join('_'), oldPassengerStr.join(''), keyCheckIsChange)).data
     } catch (err) {
-      return res(err, '')
+      return res(err)
     }
-    if (!confirmSingleForQueueResult.status) return res(new Error('提交订单请求失败。' + confirmSingleForQueueResult.messages[0]), '')
-    if (!confirmSingleForQueueResult.data.submitStatus) return res(new Error(confirmSingleForQueueResult.data.errMsg), '')
+    if (!confirmSingleForQueueResult.status) return res(new Error('提交订单请求失败。' + confirmSingleForQueueResult.messages[0]))
+    if (!confirmSingleForQueueResult.data.submitStatus) return res(new Error(confirmSingleForQueueResult.data.errMsg))
     console.log('ConfirmSingleForQueue')
     console.log(confirmSingleForQueueResult)
 
@@ -885,10 +907,10 @@ class Client {
     try {
       resultOrderForDcQueueResult = (await this._resultOrderForDcQueue(globalRepeatSubmitToken, orderId)).data
     } catch (err) {
-      return res(err, orderId)
+      return res(err)
     }
-    if (!resultOrderForDcQueueResult.status) return res(new Error('订单确认失败'), orderId)
-    if (!resultOrderForDcQueueResult.data.submitStatus) return res(new Error('订单确认失败。' + resultOrderForDcQueueResult.data.errMsg), orderId)
+    if (!resultOrderForDcQueueResult.status) return res(new Error('订单确认失败'))
+    if (!resultOrderForDcQueueResult.data.submitStatus) return res(new Error('订单确认失败。' + resultOrderForDcQueueResult.data.errMsg))
     return res(null, orderId)
   }
 }

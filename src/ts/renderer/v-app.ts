@@ -22,7 +22,7 @@ export default class extends Vue {
   mounted () {
     this.$nextTick(() => {
       this.status = '正在获取车站'
-      this.client.stationName().then(({ err, data }) => {
+      this.client.getStationName().then(({ err, data }) => {
         if (err) {
           this.status = '获取车站失败。' + err.message
           return

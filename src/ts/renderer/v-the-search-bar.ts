@@ -2,7 +2,6 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 import InputStation from '../../vue/InputStation.vue'
 import InputCalender from '../../vue/InputCalender.vue'
 import Button from '../../vue/Button.vue'
-import { Station } from './client'
 import { getDate } from './util'
 
 @Component({
@@ -17,7 +16,6 @@ export default class extends Vue {
   to: string = ''
 
   queryBtnDisabled: boolean = false
-  @Prop({ default: [] }) stations: Station[]
   @Prop({ default: getDate() }) value: string
 
   get goDate () {
@@ -30,13 +28,9 @@ export default class extends Vue {
   }
 
   async query () {
-    let fromCode: string = ''
-    let toCode: string = ''
-    for (let i = 0; i < this.stations.length; i++) {
-      if (fromCode && toCode) break
-      if (this.stations[i].name === this.from) fromCode = this.stations[i].code
-      if (this.stations[i].name === this.to) toCode = this.stations[i].code
-    }
+    const stationObject = this.client.getStations()
+    let fromCode: string = stationObject.stationMap[this.from]
+    let toCode: string = stationObject.stationMap[this.to]
 
     this.bus.$emit('setTableData', [])
     // this.queryBtnDisabled = true

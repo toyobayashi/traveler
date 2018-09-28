@@ -11,16 +11,17 @@ export default class extends Vue {
   stations: Station[] = []
   page: number = 0
   numberPerPage: number = 10
-  @Prop() stationsAll: Station[]
+
   @Prop({ default: '' }) value: string
 
   @Emit('input') onInput (_value: string) {
     this.stations = []
     this.page = 0
     if (_value) {
-      for (let i = 0; i < this.stationsAll.length; i++) {
-        if (this.stationsAll[i].name.includes(_value) || this.stationsAll[i].fullSpelling.includes(_value) || this.stationsAll[i].initialSpelling.includes(_value)) {
-          this.stations.push(this.stationsAll[i])
+      const stationAll = this.client.getStations().stations
+      for (let i = 0; i < stationAll.length; i++) {
+        if (stationAll[i].name.includes(_value) || stationAll[i].fullSpelling.includes(_value) || stationAll[i].initialSpelling.includes(_value)) {
+          this.stations.push(stationAll[i])
         }
       }
     }
@@ -33,9 +34,10 @@ export default class extends Vue {
       if (!this.stations.length) {
         this.stations = []
         this.page = 0
-        for (let i = 0; i < this.stationsAll.length; i++) {
-          if (this.stationsAll[i].name.includes(_value) || this.stationsAll[i].fullSpelling.includes(_value) || this.stationsAll[i].initialSpelling.includes(_value)) {
-            this.stations.push(this.stationsAll[i])
+        const stationAll = this.client.getStations().stations
+        for (let i = 0; i < stationAll.length; i++) {
+          if (stationAll[i].name.includes(_value) || stationAll[i].fullSpelling.includes(_value) || stationAll[i].initialSpelling.includes(_value)) {
+            this.stations.push(stationAll[i])
           }
         }
       }

@@ -4,7 +4,7 @@ import ModalLogin from '../../vue/ModalLogin.vue'
 import TheSearchBar from '../../vue/TheSearchBar.vue'
 import TheTable from '../../vue/TheTable.vue'
 import Loading from '../../vue/Loading.vue'
-import Client, { Station } from './client'
+import Client from './client'
 import { getDate } from './util'
 
 @Component({
@@ -19,19 +19,19 @@ import { getDate } from './util'
 export default class extends Vue {
   client: Client = this.client
   status: string = '已就绪'
-  stationName: Station[] = []
+
   goDate: string = getDate()
   mounted () {
     this.$nextTick(() => {
       this.status = '正在获取车站'
       this.showLoading()
-      this.client.getStationName().then(({ err, data }) => {
+      this.client.getStationName().then(({ err }) => {
         this.hideLoading()
         if (err) {
           this.status = '获取车站失败。' + err.message
           return
         }
-        this.stationName = data || []
+
         this.status = '已就绪'
       })
       this.bus.$on('status', (status: string) => {

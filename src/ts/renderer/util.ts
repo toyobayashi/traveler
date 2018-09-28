@@ -1,4 +1,4 @@
-import { Station, Train } from './client'
+import { Station, Train, StationObject } from './client'
 
 export function getDate (t?: Date): string {
   if (!t) t = new Date()
@@ -19,14 +19,19 @@ export function sleep (ms: number) {
   })
 }
 
-export function parseStationName (stationNameString: string) {
+export function parseStationName (stationNameString: string): StationObject {
   const stringStations = stationNameString.split('@').slice(1)
-  const objectStasions: Station[] = []
+  const stations: Station[] = []
+  const stationMap: {[key: string]: string} = {}
   for (let i = 0; i < stringStations.length; i++) {
     const [, name, code, fullSpelling, initialSpelling, index] = stringStations[i].split('|')
-    objectStasions[i] = { name, code, fullSpelling, initialSpelling, index: Number(index) }
+    stations[i] = { name, code, fullSpelling, initialSpelling, index: Number(index) }
+    stationMap[stationMap[code] = name] = code
   }
-  return objectStasions
+  return {
+    stations,
+    stationMap
+  }
 }
 
 export type SeatType = 'A' | 'F' | '9' | 'P' | 'S' | 'M' | 'O' | '6' | '4' | '3' | '2' | '1'

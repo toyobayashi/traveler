@@ -242,6 +242,13 @@ export interface Train {
   qt?: string
 }
 
+export interface StationObject {
+  stations: Station[]
+  stationMap: {
+    [key: string]: string
+  }
+}
+
 export type User = {
   username: string,
   name: string,
@@ -276,10 +283,17 @@ class Client {
   private static readonly CANCEL_NO_COMPLETE_MY_ORDER = '/otn/queryOrder/cancelNoCompleteMyOrder'
 
   private _user: User = null
-  private _stationName: Station[] = []
+  private _stationObject: StationObject = {
+    stations: [],
+    stationMap: {}
+  }
 
   public getUser () {
     return this._user
+  }
+
+  public getStations () {
+    return this._stationObject
   }
 
   public async captchaImage () {
@@ -433,10 +447,10 @@ class Client {
       const jsString = matchResult[1]
       localStorage.setItem('travelerStationName', jsString)
 
-      const objectStasions = parseStationName(jsString)
+      const objectStations = parseStationName(jsString)
 
-      this._stationName = objectStasions
-      return res(null, objectStasions)
+      this._stationObject = objectStations
+      return res(null, objectStations)
     } catch (err) {
       return res(err)
     }
@@ -446,7 +460,7 @@ class Client {
     const travelerStationName = localStorage.getItem('travelerStationName')
     if (travelerStationName) {
       const objectStasions = parseStationName(travelerStationName)
-      if (!this._stationName.length) this._stationName = objectStasions
+      if (!this._stationObject.stations.length) this._stationObject = objectStasions
       return Promise.resolve(res(null, objectStasions))
     }
 
@@ -726,13 +740,8 @@ class Client {
    */
   public async doOrder (train: Train, trainDate: string, backTrainDate: string, passengers: PassengerDTO[]) {
 
-    let fromName: string = ''
-    let toName: string = ''
-    for (let i = 0; i < this._stationName.length; i++) {
-      if (fromName && toName) break
-      if (this._stationName[i].code === train.fromCode) fromName = this._stationName[i].name
-      if (this._stationName[i].code === train.toCode) toName = this._stationName[i].name
-    }
+    let fromName: string = this._stationObject.stationMap[train.fromCode]
+    let toName: string = this._stationObject.stationMap[train.toCode]
 
     let submitOrderResult: SubmitOrderResponse
     try {

@@ -1,6 +1,6 @@
 import { Vue, Component, Prop } from 'vue-property-decorator'
 import Button from '../../vue/Button.vue'
-import { Station, Train } from './client'
+import { Train } from './client'
 import { getDate } from './util'
 
 @Component({
@@ -10,16 +10,8 @@ import { getDate } from './util'
 })
 export default class extends Vue {
 
-  @Prop({ default: [] }) stations: Station[]
   @Prop({ default: getDate() }) goDate: string
   data: any[] = []
-
-  getStationName (code: string) {
-    for (let i = 0; i < this.stations.length; i++) {
-      if (this.stations[i].code === code) return this.stations[i].name
-    }
-    return ''
-  }
 
   getClass (property: any) {
     if (property) {
@@ -31,13 +23,17 @@ export default class extends Vue {
     } else return []
   }
 
+  getClientStationObject () {
+    return this.client.getStations()
+  }
+
   doOrder (train: Train) {
     const user = this.client.getUser()
     if (!user) {
       this.bus.$emit('modal:login')
       return
     }
-    if (!this.stations.length) {
+    if (!this.getClientStationObject().stations.length) {
       return this.changeStatus('未获取到站名列表无法预定车票')
     }
     // TODO

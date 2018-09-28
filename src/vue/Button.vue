@@ -36,8 +36,7 @@
 }
 
 .tr-btn[disabled] {
-  background-color: rgb(237, 235, 235) !important;
-  color: #000;
+  background-color: rgb(192, 192, 184) !important;
   cursor: not-allowed;
 }
 </style>

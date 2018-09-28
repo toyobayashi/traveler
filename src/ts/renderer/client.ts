@@ -107,6 +107,20 @@ export interface ResultOrderForDcQueueResponse extends HttpResponse {
   }
 }
 
+export interface QueryTicketPriceResponse extends HttpResponse {
+  data: {
+    OT: any[]
+    train_no: string
+    WZ?: string
+    '1'?: string
+    '3'?: string
+    '4'?: string
+    A1?: string
+    A3?: string
+    A4?: string
+  }
+}
+
 export interface QueryMyOrderNoComleteResponse extends HttpResponse {
   data: {
     orderDBList: Array<{
@@ -222,10 +236,12 @@ export interface Train {
   fromTime: string
   toTime: string
   duration: string
-  status: boolean
+  canWebBuy: boolean
   ypInfo: string
   locationCode: string
   remark: string
+  fromStationNo: string
+  toStationNo: string
   gjdw?: string
   dw?: string
   swz?: string
@@ -281,6 +297,7 @@ class Client {
   private static readonly RESULT_ORDER_FOR_DC_QUEUE = '/otn/confirmPassenger/resultOrderForDcQueue'
   private static readonly QUERY_MY_ORDER_NO_COMPLETE = '/otn/queryOrder/queryMyOrderNoComplete'
   private static readonly CANCEL_NO_COMPLETE_MY_ORDER = '/otn/queryOrder/cancelNoCompleteMyOrder'
+  private static readonly QUERY_TICKET_PRICE = '/otn/leftTicket/queryTicketPrice'
 
   private _user: User = null
   private _stationObject: StationObject = {
@@ -507,10 +524,12 @@ class Client {
           fromTime: dataArr[8],
           toTime: dataArr[9],
           duration: dataArr[10],
-          status: dataArr[11] === 'Y',
+          canWebBuy: dataArr[11] === 'Y',
           ypInfo: dataArr[12],
           locationCode: dataArr[15],
-          remark: dataArr[1]
+          remark: dataArr[1],
+          fromStationNo: dataArr[16],
+          toStationNo: dataArr[17]
         }
 
         for (let j = 0; j < seatTypes.length; j++) {
@@ -726,6 +745,27 @@ class Client {
       if (!cancelNoCompleteMyOrderResult.status) return res(new Error(cancelNoCompleteMyOrderResult.messages[0]))
       return res(null, true)
 
+    } catch (err) {
+      return res(err)
+    }
+  }
+
+  public async queryTicketPrice (train: Train, goDate: string) {
+    try {
+      const queryTicketPriceResult = (await request<QueryTicketPriceResponse>({
+        method: 'GET',
+        url: Client.QUERY_TICKET_PRICE,
+        qs: {
+          train_no: train.trainNo,
+          from_station_no: train.fromStationNo,
+          to_station_no: train.toStationNo,
+          seat_types: train.seatTypes,
+          train_date: goDate
+        }
+      })).data
+
+      if (!queryTicketPriceResult.status) return res(new Error(queryTicketPriceResult.messages[0]))
+      return res(null, queryTicketPriceResult.data)
     } catch (err) {
       return res(err)
     }

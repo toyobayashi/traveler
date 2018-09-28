@@ -4,6 +4,7 @@
   <TheSearchBar :stations="stationName" v-model="goDate"/>
   <TheTable :stations="stationName" :goDate="goDate"/>
   <ModalLogin :width="400" />
+  <Loading />
 </div>
 </template>
 

@@ -3,6 +3,7 @@ import TheHeader from '../../vue/TheHeader.vue'
 import ModalLogin from '../../vue/ModalLogin.vue'
 import TheSearchBar from '../../vue/TheSearchBar.vue'
 import TheTable from '../../vue/TheTable.vue'
+import Loading from '../../vue/Loading.vue'
 import Client, { Station } from './client'
 import { getDate } from './util'
 
@@ -11,7 +12,8 @@ import { getDate } from './util'
     TheHeader,
     ModalLogin,
     TheSearchBar,
-    TheTable
+    TheTable,
+    Loading
   }
 })
 export default class extends Vue {
@@ -22,7 +24,9 @@ export default class extends Vue {
   mounted () {
     this.$nextTick(() => {
       this.status = '正在获取车站'
+      this.showLoading()
       this.client.getStationName().then(({ err, data }) => {
+        this.hideLoading()
         if (err) {
           this.status = '获取车站失败。' + err.message
           return

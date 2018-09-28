@@ -39,11 +39,12 @@ export default class extends Vue {
     }
 
     this.bus.$emit('setTableData', [])
-    this.queryBtnDisabled = true
+    // this.queryBtnDisabled = true
     this.changeStatus('查询余票中')
-    console.log(this.goDate)
+    this.showLoading()
     let res = await this.client.leftTicket(fromCode, toCode, this.goDate)
-    this.queryBtnDisabled = false
+    this.hideLoading()
+    // this.queryBtnDisabled = false
     if (res.err) {
       this.changeStatus('查询余票失败。' + res.err.message)
       console.log(res.err)

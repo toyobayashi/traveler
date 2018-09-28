@@ -11,5 +11,7 @@ export default () => ({
     Vue.prototype.client = new Client()
     Vue.prototype.bus = bus
     Vue.prototype.changeStatus = (status: string) => (bus.$emit('status', status), void 0)
+    Vue.prototype.showLoading = () => (bus.$emit('loading', true), void 0)
+    Vue.prototype.hideLoading = () => (bus.$emit('loading', false), void 0)
   }
 })

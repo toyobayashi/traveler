@@ -9,6 +9,7 @@ declare module 'vue/types/vue' {
     client: Client
     bus: Vue
     changeStatus (status: string): void
+    alert (text: string, title?: string): void
     showLoading (): void
     hideLoading (): void
   }

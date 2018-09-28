@@ -1,6 +1,8 @@
 import { Vue, Component } from 'vue-property-decorator'
 import TheHeader from '../../vue/TheHeader.vue'
 import ModalLogin from '../../vue/ModalLogin.vue'
+import ModalOrder from '../../vue/ModalOrder.vue'
+import ModalAlert from '../../vue/ModalAlert.vue'
 import TheSearchBar from '../../vue/TheSearchBar.vue'
 import TheTable from '../../vue/TheTable.vue'
 import Loading from '../../vue/Loading.vue'
@@ -11,6 +13,8 @@ import { getDate } from './util'
   components: {
     TheHeader,
     ModalLogin,
+    ModalOrder,
+    ModalAlert,
     TheSearchBar,
     TheTable,
     Loading

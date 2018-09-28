@@ -14,7 +14,7 @@
         width="293px"
         height="190px"
         @click="verifyClick"></canvas>
-      <img src="../../res/loading.gif" class="loading" v-show="loading" />
+      <img src="../../res/loading.gif" class="loading" v-if="loading" />
       <img
         class="mark"
         src="../../res/mark.png"

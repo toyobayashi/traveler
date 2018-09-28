@@ -2,6 +2,7 @@ import { Component, Vue } from 'vue-property-decorator'
 import Modal from '../../vue/Modal.vue'
 import Button from '../../vue/Button.vue'
 import InputText from '../../vue/InputText.vue'
+import { sleep } from './util'
 
 let ctx: CanvasRenderingContext2D
 
@@ -78,6 +79,7 @@ export default class extends Vue {
   }
 
   verifyClick (e: MouseEvent) {
+    if (this.loading) return
     const pos = `${e.offsetX},${e.offsetY - 30}`
     this.point.push(pos)
     console.log(this.point)
@@ -102,14 +104,23 @@ export default class extends Vue {
     if (res.err) {
       console.log(res.err)
       this.changeStatus(res.err.message)
-      return this.bus.$emit('modal:login')
+      this.bus.$emit('modal:login')
+      return
     }
     localStorage.setItem('trUser', this.username)
 
     console.log(res.data)
-    this.changeStatus('正在获取乘客信息')
-    const psgRes = await this.client.getPassenger()
-    if (psgRes.err) return this.changeStatus('获取乘客信息失败。' + psgRes.err.message)
+
+    while (true) {
+      this.changeStatus('正在获取乘客信息')
+      const psgRes = await this.client.getPassenger()
+      if (!psgRes.err) {
+        break
+      }
+      this.changeStatus('获取乘客信息失败。' + psgRes.err.message)
+      await sleep(1000)
+    }
+    // if (psgRes.err) return this.changeStatus('获取乘客信息失败。' + psgRes.err.message)
     console.log(this.client.getUser())
     this.changeStatus('已就绪')
 
@@ -118,6 +129,8 @@ export default class extends Vue {
   mounted () {
     this.$nextTick(() => {
       this.bus.$on('modal:login', () => {
+        const hour = new Date().getHours() // 中国时间
+        if (hour >= 23 || hour < 6) this.alert('12306维护时间不能登录')
         this.show = true
         this.captchaImage()
         window.addEventListener('keydown', this.keyboardListener)

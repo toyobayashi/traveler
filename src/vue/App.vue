@@ -3,7 +3,9 @@
   <TheHeader :user="client.getUser()" :status="status" />
   <TheSearchBar v-model="goDate"/>
   <TheTable :goDate="goDate"/>
-  <ModalLogin :width="400" />
+  <ModalLogin />
+  <ModalOrder />
+  <ModalAlert />
   <Loading />
 </div>
 </template>

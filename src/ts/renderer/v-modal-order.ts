@@ -2,6 +2,7 @@ import { Component, Vue } from 'vue-property-decorator'
 import Modal from '../../vue/Modal.vue'
 import Button from '../../vue/Button.vue'
 import InputText from '../../vue/InputText.vue'
+import { seatTypeMap } from './util'
 
 @Component({
   components: {
@@ -17,11 +18,16 @@ export default class extends Vue {
   goDate: string = ''
   passengers: PassengerDTO[] = []
   selectedPassengers: PassengerDTO[] = []
+  seatTypeMap: typeof seatTypeMap = seatTypeMap
 
   close () {
     this.train = null
     this.goDate = ''
     this.show = false
+    for (let i = 0; i < this.selectedPassengers.length;) {
+      this.selectedPassengers[i].seatType = void 0
+      this.selectedPassengers.splice(i, 1)
+    }
   }
 
   watch () {
@@ -45,6 +51,15 @@ export default class extends Vue {
     }
     if (!exists) {
       this.selectedPassengers.push(passenger)
+    }
+  }
+
+  removePassenger (passenger: PassengerDTO) {
+    for (let i = 0; i < this.selectedPassengers.length; i++) {
+      if (this.selectedPassengers[i].passenger_id_no === passenger.passenger_id_no) {
+        this.selectedPassengers.splice(i, 1)
+        break
+      }
     }
   }
 

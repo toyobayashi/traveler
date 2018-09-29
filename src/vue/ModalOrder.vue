@@ -17,6 +17,27 @@
           <div>出发时间：{{goDate + ' ' + (train ? train.fromTime : '')}}</div>
           <div>时长：{{(train ? train.duration : '')}}</div>
           <div>到达时刻：{{(train ? train.toTime : '')}}</div>
+
+          <table class="seat-table" cellspacing="0" border="0">
+            <tr>
+              <td v-for="seatType in seatTypeMap" :key="seatType.code" v-if="train && train[seatType.code]">{{seatType.name}}</td>
+              <td v-if="train && train.wz">无座</td>
+            </tr>
+            <tr>
+              <td v-for="seatType in seatTypeMap" :key="seatType.code" v-if="train && train[seatType.code]">{{(train ? train[seatType.code] : '')}}</td>
+              <td v-if="train && train.wz">{{(train ? train.wz : '')}}</td>
+            </tr>
+          </table>
+
+        </div>
+        <div class="passenger-list">
+          <div class="passenger-line" v-for="p in selectedPassengers" :key="p.passenger_id_no">
+            <span style="flex: 2">{{p.passenger_name}}</span>
+            <select style="flex: 5; outline: none" v-model="p.seatType">
+              <option v-for="(seatType, code) in seatTypeMap" :key="seatType.code" v-if="train && train[seatType.code]" :value="code">{{seatType.name}}</option>
+            </select>
+            <div style="flex: 3" class="text-center"><span class="remove-btn" @click="removePassenger(p)">×</span></div>
+          </div>
         </div>
         <div class="modal-footer flex-around">
           <Button color="orange" @click.native="watch">监控</Button>
@@ -63,5 +84,37 @@
 }
 .order-body .content {
   flex: 8;
+}
+.order-body .seat-table {
+  border-top: 1px solid rgb(102, 200, 232);
+  border-left: 1px solid rgb(102, 200, 232);
+}
+.order-body .seat-table td {
+  border-right: 1px solid rgb(102, 200, 232);
+  border-bottom: 1px solid rgb(102, 200, 232);
+  padding: 0 5px;
+  text-align: center;
+}
+.order-body .passenger-list {
+  margin-top: 5px;
+  height: calc(100% - 189px);
+  padding: 0 20px;
+  overflow: auto;
+}
+.order-body .passenger-line {
+  display: flex;
+  margin-bottom: 5px;
+}
+.order-body .remove-btn {
+  display: inline-block;
+  user-select: none;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 50%;
+  background: red;
+  color: #fff;
 }
 </style>

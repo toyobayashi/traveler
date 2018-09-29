@@ -6,7 +6,7 @@
   <ModalLogin />
   <ModalOrder />
   <ModalAlert />
-  <Loading />
+  <Loading :status="status" />
 </div>
 </template>
 

@@ -22,24 +22,43 @@ function res (err: Error | null, data = null) {
 }
 
 class Client {
+  // 验证码图片
   private static readonly CAPTCHA_IMAGE = () => `/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&${Math.random()}`
+  // 验证码校验
   private static readonly CAPTCHA_CHECK = '/passport/captcha/captcha-check'
+  // 登录
   private static readonly LOGIN = '/passport/web/login'
+  // 获取token
   private static readonly AUTH_UAMTK = '/passport/web/auth/uamtk'
+  // 验证登录
   private static readonly AUTH_CLIENT = '/otn/uamauthclient'
+  // 退出登录
   private static readonly LOGOUT = '/otn/login/loginOut'
+  // 获取联系人
   private static readonly GET_PASSENGER = '/otn/confirmPassenger/getPassengerDTOs'
+  // 获取所有站名
   private static readonly STATION_NAME = '/otn/resources/js/framework/station_name.js'
+  // 查询余票
   private static readonly LEFT_TICKET = '/otn/leftTicket/queryA'
+  // 订单的提交请求
   private static readonly SUBMIT_ORDER_REQUEST = '/otn/leftTicket/submitOrderRequest'
+  // 获取单程票key
   private static readonly INIT_DC = '/otn/confirmPassenger/initDc'
+  // 检查订单
   private static readonly CHECK_ORDER_INFO = '/otn/confirmPassenger/checkOrderInfo'
+  // 获取队列和余票信息
   private static readonly GET_QUEUE_COUNT = '/otn/confirmPassenger/getQueueCount'
+  // 确认订单
   private static readonly CONFIRM_SINGLE_FOR_QUEUE = '/otn/confirmPassenger/confirmSingleForQueue'
+  // 轮询等待时间
   private static readonly QUERY_ORDER_WAIT_TIME = '/otn/confirmPassenger/queryOrderWaitTime'
+  // 单程票订单结果
   private static readonly RESULT_ORDER_FOR_DC_QUEUE = '/otn/confirmPassenger/resultOrderForDcQueue'
+  // 获取未完成订单
   private static readonly QUERY_MY_ORDER_NO_COMPLETE = '/otn/queryOrder/queryMyOrderNoComplete'
+  // 取消未完成订单
   private static readonly CANCEL_NO_COMPLETE_MY_ORDER = '/otn/queryOrder/cancelNoCompleteMyOrder'
+  // 查询票价
   private static readonly QUERY_TICKET_PRICE = '/otn/leftTicket/queryTicketPrice'
 
   private _user: User = null
@@ -333,7 +352,21 @@ class Client {
     })
   }
 
-  private async _getGlobalRepeatSubmitToken () {
+  public async submitOrderRequest (secretStr: string,
+                                   trainDate: string,
+                                   backTrainDate: string,
+                                   queryFromStationName: string,
+                                   queryToStationName: string) {
+    try {
+      const submitOrderRequestResult = (await this._submitOrderRequest(secretStr, trainDate, backTrainDate, queryFromStationName, queryToStationName)).data
+      if (!submitOrderRequestResult.status) return res(new Error('提交订单请求失败。' + submitOrderRequestResult.messages[0]))
+      return res(null, submitOrderRequestResult.data)
+    } catch (err) {
+      return res(err)
+    }
+  }
+
+  private async _getTokenDC (): Promise<[string, string]> {
     const htmlStr = (await request<string>({
       method: 'GET',
       url: Client.INIT_DC
@@ -345,8 +378,17 @@ class Client {
     if (!matchGlobalRepeatSubmitToken || !matchticketInfoForPassengerForm) throw new Error('正则匹配失败，请检查是否登录')
 
     const globalRepeatSubmitToken = matchGlobalRepeatSubmitToken[1]
-    const keyCheckIsChange = JSON.parse(matchticketInfoForPassengerForm[1].replace(/'/g, '"')).key_check_isChange
+    const keyCheckIsChange: string = JSON.parse(matchticketInfoForPassengerForm[1].replace(/'/g, '"')).key_check_isChange
     return [globalRepeatSubmitToken, keyCheckIsChange]
+  }
+
+  public async getTokenDC () {
+    try {
+      const [repeatSubmitToken, keyCheckIsChange] = await this._getTokenDC()
+      return res(null, [repeatSubmitToken, keyCheckIsChange])
+    } catch (err) {
+      return res(err)
+    }
   }
 
   private _checkOrderInfo (repeatSubmitToken: string,
@@ -374,6 +416,19 @@ class Client {
     })
   }
 
+  public async checkOrderInfo (repeatSubmitToken: string, passengerTicketStr: string, oldPassengerStr: string) {
+    try {
+      const checkOrderInfoResult = (await this._checkOrderInfo(repeatSubmitToken, passengerTicketStr, oldPassengerStr)).data
+      if (!checkOrderInfoResult.status) return res(new Error('检查订单失败。' + checkOrderInfoResult.messages[0]))
+      if (!checkOrderInfoResult.data.submitStatus) return res(new Error(checkOrderInfoResult.data.errMsg))
+      if (checkOrderInfoResult.data.ifShowPassCode === 'Y') return res(new Error('需要验证码，暂时不支持'))
+
+      return res(null, checkOrderInfoResult.data)
+    } catch (err) {
+      return res(err)
+    }
+  }
+
   private _getQueueCount (repeatSubmitToken: string, train: Train, trainDate: string, seatType: string, purposeCodes: string = '00', jsonAtt: string = '') {
     const currentDate = new Date()
     const arrDate = trainDate.split('-')
@@ -397,6 +452,17 @@ class Client {
         _json_att: jsonAtt
       }
     })
+  }
+
+  public async getQueueCount (repeatSubmitToken: string, train: Train, trainDate: string, seatType: string) {
+    try {
+      const getQueueCountResult = (await this._getQueueCount(repeatSubmitToken, train, trainDate, seatType)).data
+      if (!getQueueCountResult.status) return res(new Error('获取剩余票数失败。' + getQueueCountResult.messages[0]))
+      if (getQueueCountResult.data.op_2 === 'true') return res(new Error(`排队人数${getQueueCountResult.data.countT}超过剩余票数`))
+      return res(null, getQueueCountResult.data)
+    } catch (err) {
+      return res(err)
+    }
   }
 
   private _confirmSingleForQueue (repeatSubmitToken: string,
@@ -430,6 +496,17 @@ class Client {
     })
   }
 
+  public async confirmSingleForQueue (repeatSubmitToken: string, train: Train, passengerTicketStr: string, oldPassengerStr: string, key: string) {
+    try {
+      const confirmSingleForQueueResult = (await this._confirmSingleForQueue(repeatSubmitToken, train, passengerTicketStr, oldPassengerStr, key)).data
+      if (!confirmSingleForQueueResult.status) return res(new Error('确认订单失败。' + confirmSingleForQueueResult.messages[0]))
+      if (!confirmSingleForQueueResult.data.submitStatus) return res(new Error(confirmSingleForQueueResult.data.errMsg))
+      return res(null, confirmSingleForQueueResult.data)
+    } catch (err) {
+      return res(err)
+    }
+  }
+
   private _queryOrderWaitTime (repeatSubmitToken: string, tourFlag: string = 'dc', jsonAtt: string = '') {
     return request<QueryOrderWaitTimeResponse>({
       method: 'GET',
@@ -443,6 +520,16 @@ class Client {
     })
   }
 
+  public async queryOrderWaitTime (repeatSubmitToken: string) {
+    try {
+      const queryOrderWaitTimeResult = (await this._queryOrderWaitTime(repeatSubmitToken)).data
+      if (!queryOrderWaitTimeResult.status) return res(new Error('获取等待时间失败。' + queryOrderWaitTimeResult.messages[0]))
+      return res(null, queryOrderWaitTimeResult.data)
+    } catch (err) {
+      return res(err)
+    }
+  }
+
   private _resultOrderForDcQueue (repeatSubmitToken: string, orderId: string, jsonAtt: string = '') {
     return request<ResultOrderForDcQueueResponse>({
       method: 'POST',
@@ -453,6 +540,17 @@ class Client {
         REPEAT_SUBMIT_TOKEN: repeatSubmitToken
       }
     })
+  }
+
+  public async resultOrderForDcQueue (repeatSubmitToken: string, orderId: string) {
+    try {
+      const resultOrderForDcQueueResult = (await this._resultOrderForDcQueue(repeatSubmitToken, orderId)).data
+      if (!resultOrderForDcQueueResult.status) return res(new Error('订单结果获取失败。' + resultOrderForDcQueueResult.messages[0]))
+      if (!resultOrderForDcQueueResult.data.submitStatus) return res(new Error('订单结果获取失败。' + resultOrderForDcQueueResult.data.errMsg))
+      return res(null, resultOrderForDcQueueResult.data)
+    } catch (err) {
+      return res(err)
+    }
   }
 
   public async queryMyOrderNoComlete (jsonAtt: string = '') {
@@ -542,7 +640,7 @@ class Client {
     let keyCheckIsChange: string = ''
 
     try {
-      [globalRepeatSubmitToken, keyCheckIsChange] = await this._getGlobalRepeatSubmitToken()
+      [globalRepeatSubmitToken, keyCheckIsChange] = await this._getTokenDC()
     } catch (err) {
       return res(err)
     }

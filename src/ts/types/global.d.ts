@@ -50,7 +50,7 @@ interface PassengerResponse extends HttpResponse {
 }
 
 interface SubmitOrderResponse extends HttpResponse {
-  data: any
+  data: string
 }
 
 interface CheckOrderInfoResponse extends HttpResponse {

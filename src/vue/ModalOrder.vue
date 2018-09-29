@@ -77,6 +77,7 @@
   border-radius: 5px;
   margin-bottom: 10px;
   display: block;
+  cursor: pointer;
 }
 .order-body .passenger .passenger-item.active {
   background: #26a306;

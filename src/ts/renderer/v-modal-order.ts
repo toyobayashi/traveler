@@ -2,7 +2,6 @@ import { Component, Vue } from 'vue-property-decorator'
 import Modal from '../../vue/Modal.vue'
 import Button from '../../vue/Button.vue'
 import InputText from '../../vue/InputText.vue'
-import { Train, PassengerDTO } from './client'
 
 @Component({
   components: {

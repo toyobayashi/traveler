@@ -1,5 +1,4 @@
 import { Vue, Component, Prop, Emit } from 'vue-property-decorator'
-import { Station } from './client'
 import InputText from '../../vue/InputText.vue'
 
 @Component({

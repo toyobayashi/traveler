@@ -1,6 +1,5 @@
 import { Vue, Component, Prop } from 'vue-property-decorator'
 import Button from '../../vue/Button.vue'
-import { Train } from './client'
 import { getDate } from './util'
 
 @Component({

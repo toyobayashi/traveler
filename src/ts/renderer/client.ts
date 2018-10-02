@@ -359,14 +359,20 @@ class Client {
                                    queryToStationName: string) {
     try {
       const submitOrderRequestResult = (await this._submitOrderRequest(secretStr, trainDate, backTrainDate, queryFromStationName, queryToStationName)).data
-      if (!submitOrderRequestResult.status) return res(new Error('提交订单请求失败。' + submitOrderRequestResult.messages[0]))
+      if (!submitOrderRequestResult.status) {
+        const message = submitOrderRequestResult.messages[0]
+        if (-1 !== message.indexOf('未处理')) {
+          return res(new Error('提交订单请求失败。您还有未处理的订单，请先前往官网或手机APP处理'))
+        }
+        return res(new Error('提交订单请求失败。' + submitOrderRequestResult.messages[0]))
+      }
       return res(null, submitOrderRequestResult.data)
     } catch (err) {
       return res(err)
     }
   }
 
-  private async _getTokenDC (): Promise<[string, string]> {
+  private async _getTokenDC () {
     const htmlStr = (await request<string>({
       method: 'GET',
       url: Client.INIT_DC
@@ -379,13 +385,13 @@ class Client {
 
     const globalRepeatSubmitToken = matchGlobalRepeatSubmitToken[1]
     const keyCheckIsChange: string = JSON.parse(matchticketInfoForPassengerForm[1].replace(/'/g, '"')).key_check_isChange
-    return [globalRepeatSubmitToken, keyCheckIsChange]
+    return { globalRepeatSubmitToken, keyCheckIsChange }
   }
 
   public async getTokenDC () {
     try {
-      const [repeatSubmitToken, keyCheckIsChange] = await this._getTokenDC()
-      return res(null, [repeatSubmitToken, keyCheckIsChange])
+      const { globalRepeatSubmitToken, keyCheckIsChange } = await this._getTokenDC()
+      return res(null, { globalRepeatSubmitToken, keyCheckIsChange })
     } catch (err) {
       return res(err)
     }
@@ -640,7 +646,9 @@ class Client {
     let keyCheckIsChange: string = ''
 
     try {
-      [globalRepeatSubmitToken, keyCheckIsChange] = await this._getTokenDC()
+      const tokens = await this._getTokenDC()
+      globalRepeatSubmitToken = tokens.globalRepeatSubmitToken
+      keyCheckIsChange = tokens.keyCheckIsChange
     } catch (err) {
       return res(err)
     }

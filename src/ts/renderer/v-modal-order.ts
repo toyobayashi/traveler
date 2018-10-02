@@ -110,7 +110,7 @@ export default class extends Vue {
       this.hideLoading()
       return
     }
-    await sleep(500)
+    await sleep(1000)
 
     this.changeStatus('正在确认订单')
     const confirmResult = await this.client.confirmSingleForQueue(tokens.data.globalRepeatSubmitToken, this.train, passengerTicketStr.join('_'), oldPassengerStr.join(''), tokens.data.keyCheckIsChange)
@@ -120,16 +120,16 @@ export default class extends Vue {
       this.hideLoading()
       return
     }
-    await sleep(500)
+    await sleep(3000)
 
-    this.changeStatus('正在等待下单')
+    this.changeStatus('正在等待出票')
     let orderId = ''
     const maxRetry = 10
     let retry = -1
     while (true) {
       if (retry >= maxRetry) {
-        this.changeStatus('等待下单失败')
-        this.alert('等待下单失败')
+        this.changeStatus('等待出票超过10次请求')
+        this.alert('等待出票超出10次请求，请前往官网或手机APP确认未完成订单是否还在队列中')
         break
       }
       retry++
@@ -142,14 +142,14 @@ export default class extends Vue {
       }
 
       if (waitResult.data.waitTime >= 0) {
-        this.changeStatus('正在等待下单：大约剩余' + waitResult.data.waitTime + '秒。')
+        this.changeStatus('出票处理中：大约剩余' + waitResult.data.waitTime + '秒。')
         await sleep(3000)
         continue
       } else {
         if (!waitResult.data.orderId) {
-          this.changeStatus('等待下单错误：' + (waitResult.data.errMsg || (waitResult.data as any).msg) + '。3秒后重试')
-          await sleep(3000)
-          continue
+          this.changeStatus('出票失败')
+          this.alert('出票失败。' + waitResult.data.msg + '。')
+          break
         } else {
           orderId = waitResult.data.orderId
           break
@@ -162,17 +162,18 @@ export default class extends Vue {
       return
     }
 
-    this.changeStatus('正在获取下单结果')
+    this.changeStatus('正在获取出票结果')
     const result = await this.client.resultOrderForDcQueue(tokens.data.globalRepeatSubmitToken, orderId)
     if (result.err) {
-      this.alert('获取下单结果失败。' + result.err)
-      this.changeStatus('获取下单结果失败。' + result.err)
+      this.alert('获取出票结果失败。' + result.err)
+      this.changeStatus('获取出票结果失败。' + result.err)
       this.hideLoading()
       return
     }
 
     this.hideLoading()
-    this.alert('下单成功，订单号为' + orderId + '，请迅速前往官方网站或使用手机APP付款')
+    this.changeStatus('出票成功')
+    this.alert('出票成功，订单号为' + orderId + '，请迅速前往官方网站或使用手机APP付款')
   }
 
   selectPassenger (passenger: PassengerDTO) {

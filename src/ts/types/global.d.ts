@@ -93,7 +93,7 @@ interface QueryOrderWaitTimeResponse extends HttpResponse {
     waitCount: number
     tourFlag: string
     orderId: string | null
-    errMsg?: string
+    msg?: string
   }
 }
 

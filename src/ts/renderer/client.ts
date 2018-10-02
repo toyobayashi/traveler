@@ -358,7 +358,12 @@ class Client {
                                    queryFromStationName: string,
                                    queryToStationName: string) {
     try {
-      const submitOrderRequestResult = (await this._submitOrderRequest(secretStr, trainDate, backTrainDate, queryFromStationName, queryToStationName)).data
+      const response = await this._submitOrderRequest(secretStr, trainDate, backTrainDate, queryFromStationName, queryToStationName)
+      if (response.res.statusCode === 302) {
+        this._user = null
+        return res(new Error('请重新登录'))
+      }
+      const submitOrderRequestResult = response.data
       if (!submitOrderRequestResult.status) {
         const message = submitOrderRequestResult.messages[0]
         if (-1 !== message.indexOf('未处理')) {
@@ -380,11 +385,12 @@ class Client {
 
     // console.log(htmlStr)
     const matchGlobalRepeatSubmitToken = htmlStr.match(/globalRepeatSubmitToken\s*=\s*['"](.*)['"]/)
-    const matchticketInfoForPassengerForm = htmlStr.match(/ticketInfoForPassengerForm\s*=\s*({.*})\s*;/)
-    if (!matchGlobalRepeatSubmitToken || !matchticketInfoForPassengerForm) throw new Error('正则匹配失败，请检查是否登录')
+    const matchTicketInfoForPassengerForm = htmlStr.match(/ticketInfoForPassengerForm\s*=\s*({.*})\s*;/)
+    console.log({ matchGlobalRepeatSubmitToken, matchTicketInfoForPassengerForm })
+    if (!matchGlobalRepeatSubmitToken || !matchTicketInfoForPassengerForm) throw new Error('获取token失败，请检查是否登录或稍后重试')
 
     const globalRepeatSubmitToken = matchGlobalRepeatSubmitToken[1]
-    const keyCheckIsChange: string = JSON.parse(matchticketInfoForPassengerForm[1].replace(/'/g, '"')).key_check_isChange
+    const keyCheckIsChange: string = JSON.parse(matchTicketInfoForPassengerForm[1].replace(/'/g, '"')).key_check_isChange
     return { globalRepeatSubmitToken, keyCheckIsChange }
   }
 

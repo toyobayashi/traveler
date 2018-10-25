@@ -5,6 +5,7 @@ import ModalOrder from '../../vue/ModalOrder.vue'
 import ModalAlert from '../../vue/ModalAlert.vue'
 import TheSearchBar from '../../vue/TheSearchBar.vue'
 import TheTable from '../../vue/TheTable.vue'
+import TheSideBar from '../../vue/TheSideBar.vue'
 import Loading from '../../vue/Loading.vue'
 import Client from './client'
 import { getDate } from './util'
@@ -17,6 +18,7 @@ import { getDate } from './util'
     ModalAlert,
     TheSearchBar,
     TheTable,
+    TheSideBar,
     Loading
   }
 })
@@ -24,7 +26,7 @@ export default class extends Vue {
   client: Client = this.client
   status: string = '已就绪'
 
-  goDate: string = getDate()
+  goDate: string = localStorage.getItem('travelerGoDate') || getDate()
   mounted () {
     this.$nextTick(() => {
       this.status = '正在获取车站'

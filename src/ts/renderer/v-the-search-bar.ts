@@ -12,8 +12,8 @@ import { getDate } from './util'
   }
 })
 export default class extends Vue {
-  from: string = ''
-  to: string = ''
+  from: string = localStorage.getItem('travelerFromStation') || ''
+  to: string = localStorage.getItem('travelerToStation') || ''
 
   queryBtnDisabled: boolean = false
   @Prop({ default: getDate() }) value: string
@@ -23,6 +23,7 @@ export default class extends Vue {
   }
 
   goDateChange (value: string) {
+    localStorage.setItem('travelerGoDate', value)
     this.$emit('input', value)
     this.bus.$emit('setTableData', [])
   }
@@ -31,6 +32,9 @@ export default class extends Vue {
     const stationObject = this.client.getStations()
     let fromCode: string = stationObject.stationMap[this.from]
     let toCode: string = stationObject.stationMap[this.to]
+
+    localStorage.setItem('travelerFromStation', this.from)
+    localStorage.setItem('travelerToStation', this.to)
 
     this.bus.$emit('setTableData', [])
     // this.queryBtnDisabled = true

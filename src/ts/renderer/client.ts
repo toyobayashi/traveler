@@ -22,6 +22,8 @@ function res (err: Error | null, data = null) {
 }
 
 class Client {
+  // 初始化页面，用于获取查票地址
+  private static readonly INIT = '/otn/leftTicket/init'
   // 验证码图片
   private static readonly CAPTCHA_IMAGE = () => `/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&${Math.random()}`
   // 验证码校验
@@ -39,7 +41,7 @@ class Client {
   // 获取所有站名
   private static readonly STATION_NAME = '/otn/resources/js/framework/station_name.js'
   // 查询余票
-  private static readonly LEFT_TICKET = '/otn/leftTicket/queryA'
+  private static leftTicketQuery = ''
   // 订单的提交请求
   private static readonly SUBMIT_ORDER_REQUEST = '/otn/leftTicket/submitOrderRequest'
   // 获取单程票key
@@ -248,9 +250,21 @@ class Client {
 
   public async leftTicket (fromStation: string, toStation: string, trainDate: string, purposeCodes?: string) {
     try {
+      if (Client.leftTicketQuery === '') {
+        const htmlStr: string = (await request<any>({
+          method: 'GET',
+          url: Client.INIT
+        })).data
+
+        const urlMatchArr = htmlStr.match(/CLeftTicketUrl\s*=\s*'(.*)'/) || []
+        Client.leftTicketQuery = urlMatchArr.length ? '/otn/' + urlMatchArr[1] : ''
+        if (Client.leftTicketQuery === '') {
+          return res(new Error('查询余票失败。未找到余票查询地址。'))
+        }
+      }
       const leftTicketResult = (await request<any>({
         method: 'GET',
-        url: Client.LEFT_TICKET,
+        url: Client.leftTicketQuery,
         qs: {
           'leftTicketDTO.train_date': trainDate,
           'leftTicketDTO.from_station': fromStation,

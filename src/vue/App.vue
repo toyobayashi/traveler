@@ -3,6 +3,7 @@
   <TheHeader :user="client.getUser()" :status="status" />
   <TheSearchBar v-model="goDate"/>
   <TheTable :goDate="goDate"/>
+  <TheSideBar />
   <ModalLogin />
   <ModalOrder />
   <ModalAlert />
@@ -24,7 +25,7 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  /* overflow: hidden; */
+  overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, Segoe WPC,Segoe UI, HelveticaNeue-Light, Noto Sans, Microsoft YaHei, PingFang SC, Hiragino Sans GB, Source Han Sans SC, Source Han Sans CN, Source Han Sans, sans-serif;
   padding-top: 30px;
   user-select: none;

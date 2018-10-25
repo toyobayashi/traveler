@@ -2,11 +2,11 @@
 <div class="input-calender">
   <input
     type="text"
-    :value="value"
+    :value="goDate"
     @click="inputClicked"
     readonly
     class="input-text"
-    :style="{ color: value === '' ? 'rgb(153, 153, 153)' : void 0 }" />
+    :style="{ color: goDate === '' ? 'rgb(153, 153, 153)' : void 0 }" />
   <div class="calender" v-show="calenderShow">
     <div class="flex-between pagination">
       <span @click="prev">上一月</span>
@@ -21,7 +21,7 @@
         :key="d"
         @click="dateClicked(d)"
         :class="{
-          active: value.split('-')[0] == year && value.split('-')[1] == month && value.split('-')[2] == d
+          active: goDate.split('-')[0] == year && goDate.split('-')[1] == month && goDate.split('-')[2] == d
         }">{{d}}</span>
     </div>
   </div>

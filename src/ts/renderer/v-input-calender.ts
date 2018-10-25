@@ -1,20 +1,17 @@
-import { Vue, Component, Prop, Emit } from 'vue-property-decorator'
+import { Vue, Component } from 'vue-property-decorator'
 import { getDays } from './util'
 
 @Component
 export default class extends Vue {
-  year: number = new Date().getFullYear()
-  month: number = new Date().getMonth() + 1
-  date: number = new Date().getDate()
+  year: number = Number(this.getStoreState('goDate').split('-')[0]) // new Date().getFullYear()
+  month: number = Number(this.getStoreState('goDate').split('-')[1]) // new Date().getFullYear()
+  date: number = Number(this.getStoreState('goDate').split('-')[2]) // new Date().getFullYear()
   calenderShow: boolean = false
 
-  // yearAndMonth: string = getDate().substring(0, getDate().lastIndexOf('/'))
-  // numberPerPage: number = 10
-  @Prop({ default: '' }) value: string
-
-  @Emit('input') onInput (_value: string) {
-    // this.$emit('input', _value)
+  get goDate () {
+    return this.getStoreState('goDate')
   }
+
   get yearAndMonth () {
     return `${this.year}年${this.month}月`
   }
@@ -29,7 +26,8 @@ export default class extends Vue {
 
   dateClicked (date: number) {
     this.date = date
-    this.$emit('input', `${this.year}-${this.month < 10 ? '0' + this.month : this.month}-${this.date < 10 ? '0' + this.date : this.date}`)
+    this.bus.$emit('setTableData', [])
+    this.$store.commit('changeGoDate', `${this.year}-${this.month < 10 ? '0' + this.month : this.month}-${this.date < 10 ? '0' + this.date : this.date}`)
     this.calenderShow = false
   }
 

@@ -1,9 +1,12 @@
-import { Vue, Component, Prop } from 'vue-property-decorator'
+import { Vue, Component } from 'vue-property-decorator'
 
 @Component
 export default class extends Vue {
   show: boolean = true
-  @Prop({ default: '' }) status: string
+
+  get status () {
+    return this.getStoreState('status')
+  }
   mounted () {
     this.$nextTick(() => {
       this.bus.$on('loading', (flag: boolean) => {

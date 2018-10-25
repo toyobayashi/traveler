@@ -1,13 +1,13 @@
 <template>
 <div class="root" id="root">
-  <TheHeader :user="client.getUser()" :status="status" />
-  <TheSearchBar v-model="goDate"/>
-  <TheTable :goDate="goDate"/>
+  <TheHeader :user="client.getUser()" />
+  <TheSearchBar />
+  <TheTable />
   <TheSideBar />
   <ModalLogin />
   <ModalOrder />
   <ModalAlert />
-  <Loading :status="status" />
+  <Loading />
 </div>
 </template>
 

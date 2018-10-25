@@ -10,8 +10,12 @@ import { User } from './client'
 export default class extends Vue {
   loginBtnDisabled: boolean = false
   logoutBtnDisabled: boolean = false
-  @Prop() status: string
+
   @Prop() user: User
+
+  get status () {
+    return this.getStoreState('status')
+  }
 
   login () {
     this.bus.$emit('modal:login')

@@ -19,14 +19,14 @@ export default class extends Vue {
   @Prop({ default: getDate() }) value: string
 
   get goDate () {
-    return this.value
+    return this.getStoreState('goDate')
   }
 
-  goDateChange (value: string) {
-    localStorage.setItem('travelerGoDate', value)
-    this.$emit('input', value)
-    this.bus.$emit('setTableData', [])
-  }
+  // goDateChange (value: string) {
+  //   localStorage.setItem('travelerGoDate', value)
+  //   this.$emit('input', value)
+  //   this.bus.$emit('setTableData', [])
+  // }
 
   async query () {
     const stationObject = this.client.getStations()

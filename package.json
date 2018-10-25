@@ -49,6 +49,7 @@
     "vue-loader": "15.2.4",
     "vue-property-decorator": "7.0.0",
     "vue-template-compiler": "2.5.16",
+    "vuex": "3.0.1",
     "webpack": "4.23.0",
     "webpack-node-externals": "^1.7.2",
     "webpack-serve": "^2.0.2"

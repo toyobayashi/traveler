@@ -1,6 +1,5 @@
-import { Vue, Component, Prop } from 'vue-property-decorator'
+import { Vue, Component } from 'vue-property-decorator'
 import Button from '../../vue/Button.vue'
-import { getDate } from './util'
 
 @Component({
   components: {
@@ -9,7 +8,9 @@ import { getDate } from './util'
 })
 export default class extends Vue {
 
-  @Prop({ default: getDate() }) goDate: string
+  get goDate () {
+    return this.getStoreState('goDate')
+  }
   data: any[] = []
 
   getClass (property: any) {

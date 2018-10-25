@@ -2,7 +2,7 @@
 <div class="search-bar">
   <div><div class="flex-around"><span class="title">出发地</span><InputStation v-model="from" /></div></div>
   <div><div class="flex-around"><span class="title">目的地</span><InputStation v-model="to" /></div></div>
-  <div><div class="flex-around"><span class="title">出发日</span><InputCalender :value="goDate" @input="goDateChange"/></div></div>
+  <div><div class="flex-around"><span class="title">出发日</span><InputCalender /></div></div>
   <div class="text-center"><Button color="orange" @click.native="query" :disabled="queryBtnDisabled">查询</Button></div>
 </div>
 </template>

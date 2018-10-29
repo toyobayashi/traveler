@@ -22,7 +22,7 @@ export function sleep (ms: number) {
 export function parseStationName (stationNameString: string): StationObject {
   const stringStations = stationNameString.split('@').slice(1)
   const stations: Station[] = []
-  const stationMap: {[key: string]: string} = {}
+  const stationMap: { [key: string]: string } = {}
   for (let i = 0; i < stringStations.length; i++) {
     const [, name, code, fullSpelling, initialSpelling, index] = stringStations[i].split('|')
     stations[i] = { name, code, fullSpelling, initialSpelling, index: Number(index) }
@@ -32,6 +32,17 @@ export function parseStationName (stationNameString: string): StationObject {
     stations,
     stationMap
   }
+}
+
+export function deepCopy<T> (obj: T): T {
+  if (typeof obj === 'function') return obj
+  if (typeof obj !== 'object' || obj === null) return obj
+  let o: any = Array.isArray(obj) ? [] : {}
+  for (let i in obj) {
+    if (typeof obj[i] === 'object') o[i] = deepCopy(obj[i])
+    else o[i] = obj[i]
+  }
+  return o
 }
 
 export type SeatType = 'A' | 'F' | '9' | 'P' | 'S' | 'M' | 'O' | '6' | '4' | '3' | '2' | '1'

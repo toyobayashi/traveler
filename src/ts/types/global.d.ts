@@ -230,7 +230,9 @@ interface Train {
   type: string
   trainNo: string
   fromCode: string
+  fromName: string
   toCode: string
+  toName: string
   fromTime: string
   toTime: string
   duration: string

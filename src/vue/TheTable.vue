@@ -22,8 +22,8 @@
     <div class="table-line" v-for="train in data" :key="train.code">
       <span style="flex: 90;font-size: 16px" class=" black bold">{{train.code}}</span>
       <span style="flex: 100" class="black bold"
-        ><div><div class="black">{{getClientStationObject().stationMap[train.fromCode]}}</div
-        ><div>{{getClientStationObject().stationMap[train.toCode]}}</div></div></span>
+        ><div><div class="black">{{train.fromName}}</div
+        ><div>{{train.toName}}</div></div></span>
       <span style="flex: 82;font-size: 14px" class=" bold"
         ><div><div class="black">{{train.fromTime}}</div
         ><div>{{train.toTime}}</div></div></span>

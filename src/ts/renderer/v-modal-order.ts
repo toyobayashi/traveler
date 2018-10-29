@@ -2,7 +2,8 @@ import { Component, Vue } from 'vue-property-decorator'
 import Modal from '../../vue/Modal.vue'
 import Button from '../../vue/Button.vue'
 import InputText from '../../vue/InputText.vue'
-import { seatTypeMap, getDate } from './util'
+import { seatTypeMap, getDate, deepCopy } from './util'
+import { TaskObject } from './v-the-side-bar'
 
 @Component({
   components: {
@@ -31,8 +32,53 @@ export default class extends Vue {
   }
 
   watch () {
-    // TODO
-    this.alert('还没做')
+    if (!this.train) {
+      this.alert('车次信息错误')
+      console.log(this.train)
+      return
+    }
+
+    if (!this.selectedPassengers.length) {
+      this.alert('请先选择乘车人')
+      return
+    }
+
+    for (let i = 0; i < this.selectedPassengers.length; i++) {
+      const p = this.selectedPassengers[i]
+      if (!p.seatType) {
+        this.alert(`请先选择${this.selectedPassengers[i].passenger_name}的坐席类型`)
+        return
+      }
+    }
+
+    const backTrainDate = getDate()
+    const passengersString = this.selectedPassengers.map(p => p.passenger_name + '/' + seatTypeMap[p.seatType as string].name).join('\n')
+    const task = {
+      train: this.train,
+      trainDate: this.goDate,
+      backTrainDate,
+      passengers: deepCopy(this.selectedPassengers),
+      passengersString,
+      status: '正在初始化',
+      count: 0,
+      timer: 0,
+      id: this.train.code + this.goDate + backTrainDate + passengersString
+    }
+
+    this.bus.$emit('getTaskList', (taskList: TaskObject[]) => {
+      let exists = false
+      for (let i = 0; i < taskList.length; i++) {
+        const t = taskList[i]
+        if (t.id === task.id) {
+          this.alert('任务已存在')
+          exists = true
+        }
+      }
+      if (!exists) {
+        this.bus.$emit('addTask', task)
+        this.close()
+      }
+    })
   }
 
   async submit () {
@@ -40,6 +86,19 @@ export default class extends Vue {
       this.alert('车次信息错误')
       console.log(this.train)
       return
+    }
+
+    if (!this.selectedPassengers.length) {
+      this.alert('请先选择乘车人')
+      return
+    }
+
+    for (let i = 0; i < this.selectedPassengers.length; i++) {
+      const p = this.selectedPassengers[i]
+      if (!p.seatType) {
+        this.alert(`请先选择${this.selectedPassengers[i].passenger_name}的坐席类型`)
+        return
+      }
     }
 
     this.showLoading()

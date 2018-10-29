@@ -14,6 +14,17 @@ export type User = {
   passengers: PassengerDTO[]
 } | null
 
+export interface OrderHook {
+  preSubmitOrderRequest? (): void
+  preGetTokenDC? (): void
+  preCheckOrderResult? (): void
+  preGetQueueCount? (): void
+  preConfirmSingleForQueue? (): void
+  preQueryOrderWaitTime? (): void
+  onQueryOrderWaitTime? (leftTime: number): void
+  preResultOrderForDcQueue? (): void
+}
+
 function res (err: Error, data?: null): { err: Error; data: null }
 function res<T = any> (err: null, data: T): { err: null; data: T }
 
@@ -644,42 +655,42 @@ class Client {
    * @param trainDate 出发日期字符串
    * @param backTrainDate 当前查询日期或返程日期
    * @param passengers 乘车人数组
+   * @param hooks 钩子
    */
-  public async doOrder (train: Train, trainDate: string, backTrainDate: string, passengers: PassengerDTO[]) {
+  public async placeOrder (train: Train, trainDate: string, backTrainDate: string, passengers: PassengerDTO[], hooks?: OrderHook) {
 
     let fromName: string = this._stationObject.stationMap[train.fromCode]
     let toName: string = this._stationObject.stationMap[train.toCode]
 
-    let submitOrderResult: SubmitOrderResponse
-    try {
-      let tmp = await this._submitOrderRequest(decodeURIComponent(train.secret), trainDate, backTrainDate, fromName, toName)
-      submitOrderResult = tmp.data
-    } catch (err) {
-      return res(err)
+    if (hooks && typeof hooks.preSubmitOrderRequest === 'function') {
+      hooks.preSubmitOrderRequest()
     }
-    console.log('SubmitOrder')
-    console.log(submitOrderResult)
 
-    if (!submitOrderResult.status) return res(new Error('提交订单请求失败。' + submitOrderResult.messages[0]))
-
-    let globalRepeatSubmitToken: string = ''
-    let keyCheckIsChange: string = ''
-
-    try {
-      const tokens = await this._getTokenDC()
-      globalRepeatSubmitToken = tokens.globalRepeatSubmitToken
-      keyCheckIsChange = tokens.keyCheckIsChange
-    } catch (err) {
-      return res(err)
+    const submitOrderRequestResult = await this.submitOrderRequest(decodeURIComponent(train.secret), trainDate, backTrainDate, fromName, toName)
+    if (submitOrderRequestResult.err) {
+      return res(new Error('提交订单请求失败。' + submitOrderRequestResult.err))
     }
+
+    if (hooks && typeof hooks.preGetTokenDC === 'function') {
+      hooks.preGetTokenDC()
+    }
+
+    const tokens = await this.getTokenDC()
+    if (!tokens.data) {
+      return res(new Error('获取token失败。' + tokens.err))
+    }
+
+    const globalRepeatSubmitToken: string = tokens.data.globalRepeatSubmitToken
+    const keyCheckIsChange: string = tokens.data.keyCheckIsChange
 
     let passengerTicketStr: string[] = []
     let oldPassengerStr: string[] = []
+    const passengerType = '1'
     for (let i = 0; i < passengers.length; i++) {
       const passenger = passengers[i]
       passengerTicketStr.push(
         `${passenger.seatType
-        },0,${passenger.passenger_type
+        },0,${passengerType
         },${passenger.passenger_name
         },${passenger.passenger_id_type_code
         },${passenger.passenger_id_no
@@ -689,75 +700,85 @@ class Client {
         `${passenger.passenger_name
         },${passenger.passenger_id_type_code
         },${passenger.passenger_id_no
-        },${passenger.passenger_type}_`
+        },${passengerType}_`
       )
     }
 
-    let checkOrderInfoResult: CheckOrderInfoResponse
-    try {
-      checkOrderInfoResult = (await this._checkOrderInfo(globalRepeatSubmitToken, passengerTicketStr.join('_'), oldPassengerStr.join(''))).data
-    } catch (err) {
-      return res(err)
+    if (hooks && typeof hooks.preCheckOrderResult === 'function') {
+      hooks.preCheckOrderResult()
     }
-    if (!checkOrderInfoResult.status) return res(new Error('提交订单请求失败。' + checkOrderInfoResult.messages[0]))
-    if (!checkOrderInfoResult.data.submitStatus) return res(new Error(checkOrderInfoResult.data.errMsg))
-    console.log('CheckOrderInfo')
-    console.log(checkOrderInfoResult)
 
-    let getQueueCountResult: GetQueueCountResponse
-    try {
-      getQueueCountResult = (await this._getQueueCount(globalRepeatSubmitToken, train, trainDate, passengers[0].seatType || '1')).data
-    } catch (err) {
-      return res(err)
+    const checkOrderResult = await this.checkOrderInfo(globalRepeatSubmitToken, passengerTicketStr.join('_'), oldPassengerStr.join(''))
+    if (checkOrderResult.err) {
+      return res(new Error('检查订单失败。' + checkOrderResult.err))
     }
-    console.log('GetQueueCount')
-    console.log(getQueueCountResult)
 
-    let confirmSingleForQueueResult: ConfirmSingleForQueueResponse
-    try {
-      confirmSingleForQueueResult = (await this._confirmSingleForQueue(globalRepeatSubmitToken, train, passengerTicketStr.join('_'), oldPassengerStr.join(''), keyCheckIsChange)).data
-    } catch (err) {
-      return res(err)
+    if (hooks && typeof hooks.preGetQueueCount === 'function') {
+      hooks.preGetQueueCount()
     }
-    if (!confirmSingleForQueueResult.status) return res(new Error('提交订单请求失败。' + confirmSingleForQueueResult.messages[0]))
-    if (!confirmSingleForQueueResult.data.submitStatus) return res(new Error(confirmSingleForQueueResult.data.errMsg))
-    console.log('ConfirmSingleForQueue')
-    console.log(confirmSingleForQueueResult)
+    const queueResult = await this.getQueueCount(globalRepeatSubmitToken, train, trainDate, passengers[0].seatType || '1')
+    if (queueResult.err) {
+      return res(new Error('获取队列信息失败。' + queueResult.err))
+    }
+    await sleep(1000)
+
+    if (hooks && typeof hooks.preConfirmSingleForQueue === 'function') {
+      hooks.preConfirmSingleForQueue()
+    }
+    const confirmResult = await this.confirmSingleForQueue(globalRepeatSubmitToken, train, passengerTicketStr.join('_'), oldPassengerStr.join(''), keyCheckIsChange)
+    if (confirmResult.err) {
+      return res(new Error('确认订单失败。' + confirmResult.err))
+    }
+    await sleep(3000)
+
+    if (hooks && typeof hooks.preQueryOrderWaitTime === 'function') {
+      hooks.preQueryOrderWaitTime()
+    }
 
     let orderId = ''
+    const maxRetry = 10
+    let retry = -1
     while (true) {
-      let queryOrderWaitTimeResule: QueryOrderWaitTimeResponse
-      try {
-        queryOrderWaitTimeResule = (await this._queryOrderWaitTime(globalRepeatSubmitToken)).data
-      } catch (err) {
-        console.log(err)
-        await sleep(3000)
-        continue
+      if (retry >= maxRetry) {
+        return res(new Error('等待出票超出10次请求，请前往官网或手机APP确认未完成订单是否还在队列中'))
       }
-      console.log('QueryOrderWaitTime')
-      console.log(queryOrderWaitTimeResule)
+      retry++
+      const waitResult = await this.queryOrderWaitTime(globalRepeatSubmitToken)
+      console.log(waitResult.data)
+      if (!waitResult.data) {
+        return res(new Error('' + waitResult.err))
+      }
 
-      if (!queryOrderWaitTimeResule.status) {
-        await sleep(3000)
-        continue
-      }
-      if (!queryOrderWaitTimeResule.data.orderId) {
+      if (waitResult.data.waitTime >= 0) {
+        if (hooks && typeof hooks.onQueryOrderWaitTime === 'function') {
+          hooks.onQueryOrderWaitTime(waitResult.data.waitTime)
+        }
         await sleep(3000)
         continue
       } else {
-        orderId = queryOrderWaitTimeResule.data.orderId
-        break
+        if (!waitResult.data.orderId) {
+          return res(new Error('出票失败。' + waitResult.data.msg + '。'))
+        } else {
+          orderId = waitResult.data.orderId
+          break
+        }
       }
     }
 
-    let resultOrderForDcQueueResult: ResultOrderForDcQueueResponse
-    try {
-      resultOrderForDcQueueResult = (await this._resultOrderForDcQueue(globalRepeatSubmitToken, orderId)).data
-    } catch (err) {
-      return res(err)
+    if (!orderId) {
+      return res(new Error('未获取到订单号'))
     }
-    if (!resultOrderForDcQueueResult.status) return res(new Error('订单确认失败'))
-    if (!resultOrderForDcQueueResult.data.submitStatus) return res(new Error('订单确认失败。' + resultOrderForDcQueueResult.data.errMsg))
+
+    if (hooks && typeof hooks.preResultOrderForDcQueue === 'function') {
+      hooks.preResultOrderForDcQueue()
+    }
+
+    const result = await this.resultOrderForDcQueue(globalRepeatSubmitToken, orderId)
+    console.log(result)
+    if (result.err) {
+      return res(new Error('获取出票结果失败。' + result.err))
+    }
+
     return res(null, orderId)
   }
 }

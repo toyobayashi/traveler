@@ -23,7 +23,8 @@
 .side-bar .content {
   width: 100%;
   height: 100%;
-  background: #fff;
+  background: rgb(71, 141, 205);
+  /* border-left: 1px solid rgb(71, 141, 205); */
 }
 .side-bar .toggle-button {
   position: absolute;

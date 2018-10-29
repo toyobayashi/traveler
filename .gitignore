@@ -1,2 +1,5 @@
-public/
-node_modules/
+app/public/
+app/node_modules/
+dist/*
+!dist/traveler-x64.nsi
+!dist/traveler.nsi

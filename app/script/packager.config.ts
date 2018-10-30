@@ -23,14 +23,13 @@ const packagerOptions: Options = {
   out: join(__dirname, '../..', 'dist'),
   // platform: 'win32',
   arch: arch,
-  ignore: /src|script|README|tslint\.json|tsconfig|package-lock\.json|\.git|\.vscode|\.npmrc/,
+  ignore: /node_modules|res|src|script|README|tslint\.json|tsconfig|package-lock\.json|\.git|\.vscode|\.npmrc/,
   appCopyright: 'Copyright (C) 2018 Toyobayashi',
   download: {
     cache: process.platform === 'win32' ? join(homedir(), '.electron') : join(homedir(), '.cache/electron'),
     mirror: process.env.npm_config_electron_mirror || 'https://npm.taobao.org/mirrors/electron/'
   },
-  overwrite: true/* ,
-  asar: true */
+  overwrite: true
 }
 
 if (process.platform === 'win32') {

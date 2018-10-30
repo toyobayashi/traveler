@@ -13,8 +13,7 @@ const handler: webpack.ICompiler.Handler = (err, stats) => console.log(err || (s
 
 if (require.main === module) {
   if (process.env.NODE_ENV === 'production') {
-    webpack(webpackConfig.mainConfig, handler)
-    webpack(webpackConfig.rendererConfig, handler)
+    prod()
   } else {
     const mainCompiler = webpack(webpackConfig.mainConfig)
     mainCompiler.watch({
@@ -41,12 +40,7 @@ export function prod (callback?: Function): Promise<void> {
         console.log(err)
         return reject(err)
       }
-      console.log(stats.toString({
-        colors: true,
-        children: false,
-        entrypoints: false,
-        modules: false
-      }) + '\n')
+      console.log(stats.toString(toStringOptions) + '\n')
       resolve()
     })
   })

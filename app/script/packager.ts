@@ -6,6 +6,7 @@ import { execSync } from 'child_process'
 import { prod } from './webpack'
 import { zip } from 'zauz'
 import { productionPackage, packagerOptions, arch } from './packager.config'
+const { createPackageWithOptions } = require('asar')
 
 function bundleProductionCode () {
   console.log(`[${new Date().toLocaleString()}] Bundle production code...`)
@@ -107,12 +108,24 @@ function getDirectorySizeSync (dir: string) {
   return size
 }
 
+function packNodeModules (root: string) {
+  return new Promise<void>((resolve) => {
+    createPackageWithOptions(root, path.join(root, '../app.asar'), { unpack: '*.node' }, () => {
+      fs.removeSync(root)
+      resolve()
+    })
+  })
+}
+
 async function main () {
   const start = new Date().getTime()
   await bundleProductionCode()
   const [appPath] = await packageApp()
-  const root = process.platform === 'darwin' ? path.join(appPath, 'traveler.app/Contents/Resources/app') : path.join(appPath, 'resources/app')
+  const root = process.platform === 'darwin' ? path.join(appPath, `${pkg.name}.app/Contents/Resources/app`) : path.join(appPath, 'resources/app')
   await writePackageJson(root)
+  execSync(`npm install --no-package-lock --production --arch=${arch} --target_arch=${arch} --build-from-source --runtime=electron --target=3.0.6 --dist-url=https://atom.io/download/electron`, { cwd: root, stdio: 'inherit' })
+  await packNodeModules(root)
+
   const newPath = await rename(appPath)
   const size = await zipApp(newPath)
   if (process.platform === 'linux') createDebInstaller(newPath)

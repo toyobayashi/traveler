@@ -2,7 +2,6 @@ import { Component, Vue } from 'vue-property-decorator'
 import Modal from '../../vue/Modal.vue'
 import Button from '../../vue/Button.vue'
 import InputText from '../../vue/InputText.vue'
-import { sleep } from './util'
 
 let ctx: CanvasRenderingContext2D
 
@@ -111,16 +110,21 @@ export default class extends Vue {
 
     console.log(res.data)
 
-    while (true) {
-      this.changeStatus('正在获取乘客信息')
-      const psgRes = await this.client.getPassenger()
-      if (!psgRes.err) {
-        break
-      }
-      this.changeStatus('获取乘客信息失败。' + psgRes.err.message)
-      await sleep(1000)
-    }
+    // while (true) {
+    //   this.changeStatus('正在获取乘客信息')
+    //   const psgRes = await this.client.getPassenger()
+    //   if (!psgRes.err) {
+    //     break
+    //   }
+    //   this.changeStatus('获取乘客信息失败。' + psgRes.err.message)
+    //   await sleep(1000)
+    // }
     // if (psgRes.err) return this.changeStatus('获取乘客信息失败。' + psgRes.err.message)
+    this.changeStatus('正在获取乘客信息')
+    const psgRes = await this.client.getPassenger()
+    if (psgRes.err) {
+      this.changeStatus('获取乘客信息失败。' + psgRes.err.message)
+    }
     console.log(this.client.getUser())
     this.changeStatus('已就绪')
 

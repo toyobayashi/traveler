@@ -6,11 +6,15 @@ import store from './store'
 Vue.use(vueGlobal())
 
 // tslint:disable-next-line:no-unused-expression
-new Vue({
+const app = new Vue({
   el: '#root',
   store,
   render: h => h(App)
 })
+
+window.onbeforeunload = function () {
+  app.bus.$emit('saveTask')
+}
 
 if (process.env.NODE_ENV !== 'production') {
   if ((module as any).hot) (module as any).hot.accept()

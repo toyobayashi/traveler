@@ -20,6 +20,7 @@ export default class extends Vue {
   passengers: PassengerDTO[] = []
   selectedPassengers: PassengerDTO[] = []
   seatTypeMap: typeof seatTypeMap = seatTypeMap
+  refreshBtnDisabled: boolean = false
 
   close () {
     this.train = null
@@ -59,7 +60,8 @@ export default class extends Vue {
       backTrainDate,
       passengers: deepCopy(this.selectedPassengers),
       passengersString,
-      status: '正在初始化',
+      statusString: '正在初始化',
+      status: 1,
       count: 0,
       timer: 0,
       id: this.train.code + this.goDate + backTrainDate + passengersString
@@ -135,6 +137,14 @@ export default class extends Vue {
     if (!exists) {
       this.selectedPassengers.push(passenger)
     }
+  }
+
+  async refreshPassenger () {
+    this.refreshBtnDisabled = true
+    await this.client.getPassenger()
+    const user = this.client.getUser()
+    if (user) this.passengers = user.passengers
+    this.refreshBtnDisabled = false
   }
 
   removePassenger (passenger: PassengerDTO) {

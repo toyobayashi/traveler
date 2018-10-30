@@ -6,7 +6,8 @@
       <div class="line"><span>车次：</span><span>{{task.train.code + ' ' + task.train.fromName + ' - ' + task.train.toName}}</span></div>
       <div class="line"><span>出发：</span><span>{{task.trainDate + ' ' + task.train.fromTime}}</span></div>
       <div class="line"><span>乘客：</span><span>{{task.passengersString}}</span></div>
-      <div class="line"><span>状态：</span><span>{{task.status}}</span></div>
+      <div class="line"><span>状态：</span><span>{{task.statusString}}</span></div>
+      <div class="pause-btn" :class="{ active: task.status === 0 }" v-if="task.status !== -1" @click="pauseTask(task)"></div>
       <div class="remove-btn" @click="removeTask(task)"></div>
     </div>
   </div>
@@ -76,6 +77,26 @@
 }
 .side-bar .content > .task > .remove-btn::before {
   content: "\2716";
+}
+.side-bar .content > .task > .pause-btn {
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
+  text-align: center;
+  border-radius: 50%;
+  background: rgb(98, 233, 104);
+  position: absolute;
+  top: 25px;
+  right: -5px;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}
+.side-bar .content > .task > .pause-btn::before {
+  content: "\25a0";
+}
+.side-bar .content > .task > .pause-btn.active::before {
+  content: "\25b6";
 }
 .side-bar .content > .task > .line {
   display: flex;

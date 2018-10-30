@@ -10,6 +10,7 @@
           class="passenger-item"
           :class="{ active: selectedPassengers.indexOf(p) !== -1 }"
           @click="selectPassenger(p)">{{p.passenger_name}}</span>
+        <Button v-if="!passengers.length" color="orange" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)" @click.native="refreshPassenger" :disabled="refreshBtnDisabled">刷新</Button>
       </div>
       <div class="content">
         <div class="modal-body">
@@ -63,6 +64,7 @@
 }
 .order-body .passenger {
   flex: 2;
+  position: relative;
   height: 400px;
   padding: 10px;
   overflow: auto;

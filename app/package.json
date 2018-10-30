@@ -1,24 +1,32 @@
 {
   "name": "traveler",
   "version": "1.0.0",
-  "description": "fuck 12306",
+  "description": "Unofficial 12306 Desktop Application",
+  "private": true,
   "main": "./public/main.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node -P ./script/tsconfig.json ./script/webpack.ts",
     "prod": "cross-env NODE_ENV=production ts-node -P ./script/tsconfig.json ./script/webpack.ts",
+    "pkg32": "cross-env NODE_ENV=production ts-node -P ./script/tsconfig.json ./script/packager.ts ia32",
+    "pkg64": "cross-env NODE_ENV=production ts-node -P ./script/tsconfig.json ./script/packager.ts x64",
     "start": "electron . --enable-logging"
   },
   "keywords": [
     "vue",
     "typescript"
   ],
-  "author": "toyobayashi",
+  "author": {
+    "name": "toyobayashi",
+    "url": "https://github.com/toyobayashi"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/toyobayashi/traveler"
   },
   "devDependencies": {
+    "@types/electron-packager": "^12.0.0",
+    "@types/fs-extra": "^5.0.4",
     "@types/html-webpack-plugin": "2.30.3",
     "@types/mini-css-extract-plugin": "0.2.0",
     "@types/node": "8.9.3",
@@ -31,8 +39,10 @@
     "cross-env": "5.2.0",
     "css-loader": "0.28.11",
     "electron": "3.0.5",
+    "electron-packager": "^12.2.0",
     "file-loader": "^2.0.0",
     "fork-ts-checker-webpack-plugin": "^0.4.9",
+    "fs-extra": "^7.0.0",
     "html-webpack-plugin": "3.2.0",
     "mini-css-extract-plugin": "0.4.1",
     "optimize-css-assets-webpack-plugin": "4.0.3",
@@ -52,7 +62,8 @@
     "vuex": "3.0.1",
     "webpack": "4.23.0",
     "webpack-node-externals": "^1.7.2",
-    "webpack-serve": "^2.0.2"
+    "webpack-serve": "^2.0.2",
+    "zauz": "^1.0.2"
   },
   "dependencies": {
     "request": "^2.88.0"

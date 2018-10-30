@@ -1,5 +1,5 @@
 {
-  "extends": "./script/tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "module": "es6",
     "target": "es2017",

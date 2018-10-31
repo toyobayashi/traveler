@@ -6,13 +6,15 @@ Vue.use(Vuex)
 
 export interface State {
   status: string,
-  goDate: string
+  goDate: string,
+  config: any
 }
 
 const store = new Vuex.Store<State>({
   state: {
     status: '已就绪',
-    goDate: localStorage.getItem('travelerGoDate') || getDate()
+    goDate: localStorage.getItem('travelerGoDate') || getDate(),
+    config: localStorage.getItem('travelerConfig') ? JSON.parse(localStorage.getItem('travelerConfig') as any) : {}
   },
   mutations: {
     changeStatus (state, status: string) {
@@ -21,6 +23,10 @@ const store = new Vuex.Store<State>({
     changeGoDate (state, goDate: string) {
       state.goDate = goDate
       localStorage.setItem('travelerGoDate', goDate)
+    },
+    changeConfig (state, config) {
+      state.config = config
+      localStorage.setItem('travelerConfig', JSON.stringify(config))
     }
   }
 })

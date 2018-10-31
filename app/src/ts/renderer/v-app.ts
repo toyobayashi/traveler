@@ -3,6 +3,7 @@ import TheHeader from '../../vue/TheHeader.vue'
 import ModalLogin from '../../vue/ModalLogin.vue'
 import ModalOrder from '../../vue/ModalOrder.vue'
 import ModalAlert from '../../vue/ModalAlert.vue'
+import ModalSetting from '../../vue/ModalSetting.vue'
 import TheSearchBar from '../../vue/TheSearchBar.vue'
 import TheTable from '../../vue/TheTable.vue'
 import TheSideBar from '../../vue/TheSideBar.vue'
@@ -15,6 +16,7 @@ import Client from './client'
     ModalLogin,
     ModalOrder,
     ModalAlert,
+    ModalSetting,
     TheSearchBar,
     TheTable,
     TheSideBar,

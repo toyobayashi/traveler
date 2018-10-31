@@ -601,9 +601,9 @@ class Client {
           _json_att: jsonAtt
         }
       })).data
-
+      console.log(queryMyOrderNoComleteResult)
       if (!queryMyOrderNoComleteResult.status) return res(new Error(queryMyOrderNoComleteResult.messages[0]))
-      return res(null, queryMyOrderNoComleteResult.data.orderDBList)
+      return res(null, queryMyOrderNoComleteResult.data ? queryMyOrderNoComleteResult.data.orderDBList : [])
 
     } catch (err) {
       return res(err)

@@ -1,12 +1,20 @@
-import { Vue, Component } from 'vue-property-decorator'
+import { Vue, Component, Prop } from 'vue-property-decorator'
 import { seatTypeMap } from './util'
-
-const TIME = 3000
+import { User } from './client'
 
 @Component
 export default class extends Vue {
   show: boolean = false
   taskList: TaskObject[] = getTaskListFromLocalStorage()
+  orderList: UncompletedOrder[] = []
+  activeTab: 'watch' | 'order' = 'watch'
+  orderStatus: string = ''
+
+  get time () {
+    return (this.getStoreState('config').time as number) || 1000
+  }
+
+  @Prop() user: User
 
   toggle () {
     this.show = !this.show
@@ -14,6 +22,28 @@ export default class extends Vue {
       document.addEventListener('click', this.toggleListener, false)
     } else {
       document.removeEventListener('click', this.toggleListener, false)
+    }
+  }
+
+  tabWatchClicked () {
+    this.activeTab = 'watch'
+  }
+
+  tabUncompletedOrderClicked () {
+    this.activeTab = 'order'
+    if (this.client.getUser()) {
+      this.orderStatus = '正在查询未完成订单'
+      this.client.queryMyOrderNoComlete().then((res) => {
+        if (res.data) {
+          this.orderList = res.data
+          this.orderStatus = '无未完成订单'
+        } else {
+          console.log(res.err)
+          this.orderStatus = '' + res.err
+        }
+      })
+    } else {
+      this.orderStatus = '未登录'
     }
   }
 
@@ -105,6 +135,7 @@ export default class extends Vue {
               if (orderResult.err) {
                 task.statusString = orderResult.err.toString()
                 task.status = 0
+                task.timer = window.setTimeout(watchHandler, _this.time)
                 return
               }
               task.statusString = '出票成功，订单号为' + orderResult.data + '，请在半小时内前往官方网站或使用APP付款'
@@ -121,16 +152,16 @@ export default class extends Vue {
             }
           } else {
             task.statusString = `已监控${++task.count}次`
-            task.timer = window.setTimeout(watchHandler, TIME)
+            task.timer = window.setTimeout(watchHandler, _this.time)
           }
         } else {
           task.statusString = `已监控${++task.count}次`
-          task.timer = window.setTimeout(watchHandler, TIME)
+          task.timer = window.setTimeout(watchHandler, _this.time)
         }
       } else {
         console.log(res.err)
         task.statusString = `已监控${++task.count}次`
-        task.timer = window.setTimeout(watchHandler, TIME)
+        task.timer = window.setTimeout(watchHandler, _this.time)
       }
     }
   }

@@ -3,9 +3,10 @@
   <TheHeader :user="client.getUser()" />
   <TheSearchBar />
   <TheTable />
-  <TheSideBar />
+  <TheSideBar :user="client.getUser()" />
   <ModalLogin />
   <ModalOrder />
+  <ModalSetting />
   <ModalAlert />
   <Loading />
 </div>

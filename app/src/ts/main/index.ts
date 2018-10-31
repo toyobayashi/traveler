@@ -1,6 +1,7 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions, nativeImage } from 'electron'
+import { app, BrowserWindow, BrowserWindowConstructorOptions, nativeImage, Menu } from 'electron'
 import { format } from 'url'
 import { join } from 'path'
+import createMenu from './menu'
 
 let mainWindow: BrowserWindow | null
 
@@ -47,6 +48,8 @@ function createWindow () {
   mainWindow.on('closed', function () {
     mainWindow = null
   })
+
+  Menu.setApplicationMenu(createMenu(mainWindow))
 }
 
 app.on('ready', createWindow)

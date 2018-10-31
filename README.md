@@ -2,7 +2,9 @@
 
 12306非官方抢票桌面应用，仅供学习参考交流。
 
-*开发中，暂不提供发布版。*
+## 截图
+
+![screanshot.png](https://github.com/toyobayashi/traveler/raw/master/img/screanshot.png)
 
 ## 跑源码
 
@@ -35,6 +37,12 @@
 
     ``` bash
     $ npm run prod
+    ```
+
+* 打包应用
+
+    ``` bash
+    $ npm run pkg64
     ```
 
 * 启动应用

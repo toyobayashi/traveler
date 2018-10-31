@@ -1,5 +1,15 @@
 import { app, Menu, MenuItemConstructorOptions, dialog, MessageBoxOptions, clipboard, BrowserWindow, shell } from 'electron'
 import checkUpdate from './update'
+import { execSync } from 'child_process'
+
+declare function __non_webpack_require__ (module: string): any
+
+let commit = ''
+let commitDate = ''
+if (process.env.NODE_ENV !== 'production') {
+  commit = execSync('git rev-parse HEAD', { cwd: require('path').join(__dirname, '..') }).toString().replace(/[\r\n]/g, '')
+  commitDate = new Date((execSync('git log -1', { cwd: require('path').join(__dirname, '..') }).toString().match(/Date:\s*(.*?)\n/) as any)[1]).toISOString()
+}
 
 export default function createMenu (win: BrowserWindow): Menu {
   const template: MenuItemConstructorOptions[] = [
@@ -57,7 +67,16 @@ export default function createMenu (win: BrowserWindow): Menu {
         {
           label: '关于',
           click () {
-            const detail = `\n版本: ${app.getVersion()}\nElectron: ${process.versions.electron}\nChrome: ${process.versions.chrome}\nNode.js: ${process.versions.node}\nV8: ${process.versions.v8}\n架构: ${process.arch}`
+            const detail = '\n' + Array.prototype.join.call([
+              `版本: ${app.getVersion()}`,
+              process.env.NODE_ENV === 'production' ? `提交: ${__non_webpack_require__('../package.json')._commit}` : `提交: ${commit}`,
+              process.env.NODE_ENV === 'production' ? `日期: ${__non_webpack_require__('../package.json')._commitDate}` : `日期: ${commitDate}`,
+              `Electron: ${process.versions.electron}`,
+              `Chrome: ${process.versions.chrome}`,
+              `Node.js: ${process.versions.node}`,
+              `V8: ${process.versions.v8}`,
+              `架构: ${process.arch}`
+            ], '\n')
             const buttons = ['确定', '复制']
             const opt: MessageBoxOptions = {
               type: 'info',

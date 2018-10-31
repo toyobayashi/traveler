@@ -14,7 +14,9 @@ export const productionPackage = {
   author: pkg.author,
   repository: pkg.repository,
   license: pkg.license,
-  dependencies: pkg.dependencies
+  dependencies: pkg.dependencies,
+  _commit: require('child_process').execSync('git rev-parse HEAD').toString().replace(/[\r\n]/g, ''),
+  _commitDate: new Date(require('child_process').execSync('git log -1').toString().match(/Date:\s*(.*?)\n/)[1]).toISOString()
 }
 
 const packagerOptions: Options = {

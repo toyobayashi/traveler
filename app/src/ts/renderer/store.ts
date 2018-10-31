@@ -14,6 +14,8 @@ let config: any = localStorage.getItem('travelerConfig')
 if (!config) {
   config = { time: 500 }
   localStorage.setItem('travelerConfig', JSON.stringify(config))
+} else {
+  config = JSON.parse(config)
 }
 
 const store = new Vuex.Store<State>({

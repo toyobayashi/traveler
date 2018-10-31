@@ -1,6 +1,6 @@
 {
   "name": "traveler",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "traveler",
   "private": true,
   "main": "./public/main.js",

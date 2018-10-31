@@ -26,7 +26,7 @@ export default class extends Vue {
 
   save () {
     if (isNaN(Number(this.time)) || Number(this.time) < 500) {
-      this.alert('必须输入不小于500的数字')
+      this.alert('监控间隔应不小于500毫秒。')
       return
     }
     let newConfig = { ...this.config, time: Number(this.time) }
@@ -37,6 +37,7 @@ export default class extends Vue {
   mounted () {
     this.$nextTick(() => {
       this.bus.$on('modal:setting', () => {
+        console.log(this.config)
         this.time = this.config.time
         this.show = true
       })

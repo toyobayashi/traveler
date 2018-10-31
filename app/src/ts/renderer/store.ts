@@ -10,11 +10,17 @@ export interface State {
   config: any
 }
 
+let config: any = localStorage.getItem('travelerConfig')
+if (!config) {
+  config = { time: 500 }
+  localStorage.setItem('travelerConfig', JSON.stringify(config))
+}
+
 const store = new Vuex.Store<State>({
   state: {
     status: '已就绪',
     goDate: localStorage.getItem('travelerGoDate') || getDate(),
-    config: localStorage.getItem('travelerConfig') ? JSON.parse(localStorage.getItem('travelerConfig') as any) : {}
+    config
   },
   mutations: {
     changeStatus (state, status: string) {

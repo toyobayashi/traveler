@@ -3,7 +3,7 @@
   <span slot="header">设置</span>
   
   <div>
-    <div class="line"><span style="flex: 1" class="flex-center">监控间隔</span><InputText style="flex: 3" v-model="time" /></div>
+    <div class="line"><span style="flex: 1" class="flex-center">监控间隔（毫秒）</span><InputText style="flex: 1" v-model="time" /></div>
   </div>
 
   <div slot="footer" class="flex-around">

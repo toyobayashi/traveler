@@ -1,6 +1,10 @@
 import { app, Menu, MenuItemConstructorOptions, dialog, MessageBoxOptions, clipboard, BrowserWindow, shell } from 'electron'
 import checkUpdate from './update'
 import { execSync } from 'child_process'
+import download from './download'
+import getPath from './path'
+import * as zauz from 'zauz'
+import * as fse from 'fs-extra'
 
 declare function __non_webpack_require__ (module: string): any
 
@@ -34,13 +38,13 @@ export default function createMenu (win: BrowserWindow): Menu {
         {
           label: '检查更新...',
           click () {
-            checkUpdate().then((versionData) => {
+            checkUpdate('toyobayashi/traveler').then((versionData) => {
               if (!versionData) {
-                dialog.showMessageBox(win, { type: 'info', message: '当前没有可用的更新。' })
+                dialog.showMessageBox(win, { type: 'info', message: '当前没有可用的更新。', noLink: true, defaultId: 0, buttons: ['确定'] })
                 return
               }
 
-              const buttons = ['前往下载', '取消']
+              const buttons = ['更新', '取消']
               dialog.showMessageBox(win, {
                 type: 'info',
                 message: '有可用的更新',
@@ -49,8 +53,31 @@ export default function createMenu (win: BrowserWindow): Menu {
                 defaultId: 0,
                 noLink: true
               }, (response) => {
-                if (buttons[response] === '前往下载') {
-                  if (versionData.exeUrl) {
+                if (buttons[response] === '更新') {
+                  if (versionData.appZipUrl) {
+                    download(versionData.appZipUrl, getPath('../app.zip')).then((p) => {
+                      if (p) {
+                        fse.mkdirsSync(getPath('../app'))
+                        zauz.unzip(p, getPath('../app')).then(() => {
+                          const buttons = ['重新启动', '稍后重启']
+                          dialog.showMessageBox(win, {
+                            type: 'info',
+                            message: '更新完成',
+                            buttons,
+                            defaultId: 0,
+                            noLink: true
+                          }, (response) => {
+                            if (buttons[response] === '重新启动') {
+                              app.relaunch({ args: ['.'] })
+                              app.exit(0)
+                            }
+                          })
+                        })
+                      }
+                    }).catch(e => {
+                      dialog.showMessageBox(win, { type: 'info', message: '更新失败。' + e, noLink: true, defaultId: 0, buttons: ['确定'] })
+                    })
+                  } else if (versionData.exeUrl) {
                     shell.openExternal(versionData.exeUrl)
                   } else if (versionData.zipUrl) {
                     shell.openExternal(versionData.zipUrl)

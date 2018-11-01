@@ -1,21 +1,35 @@
 import * as request from 'request'
 import { app } from 'electron'
+import getPath from './path'
+import * as fs from 'original-fs'
+import * as fse from 'fs-extra'
+const asar = require('asar')
 
-export default function () {
+if (process.env.NODE_ENV === 'production') {
+  if (fs.existsSync(getPath('../app'))) {
+    fs.unlinkSync(getPath('../app.asar'))
+    if (fs.existsSync(getPath('../app.asar.unpacked'))) fse.removeSync(getPath('../app.asar.unpacked'))
+    asar.createPackageWithOptions(getPath('../app'), getPath('../app.asar'), { unpack: '*.node' }, () => {
+      if (fs.existsSync(getPath('../app.asar'))) fse.removeSync(getPath('../app'))
+    })
+  }
+}
+
+export default function (githubRepo: string) {
   const headers = {
     'User-Agent': 'traveler'
   }
   const releases = {
-    url: 'https://api.github.com/repos/toyobayashi/traveler/releases',
+    url: `https://api.github.com/repos/${githubRepo}/releases`,
     json: true,
     headers
   }
   const tags = {
-    url: 'https://api.github.com/repos/toyobayashi/traveler/tags',
+    url: `https://api.github.com/repos/${githubRepo}/tags`,
     json: true,
     headers
   }
-  return new Promise<{ version: string; commit: string; zipUrl: string; exeUrl: string } | null>((resolve, reject) => {
+  return new Promise<{ version: string; commit: string; zipUrl: string | null; exeUrl: string | null; appZipUrl: string | null } | null>((resolve, reject) => {
     request(releases, (err, _res, body) => {
       if (err) {
         reject(err)
@@ -34,11 +48,13 @@ export default function () {
         return
       }
       // const description = marked(latest.body)
+      const appZip = latest.assets.filter((a: any) => a.name === 'app.zip')[0]
       const zip = latest.assets.filter((a: any) => ((a.content_type === 'application/x-zip-compressed' || a.content_type === 'application/zip') && (a.name.indexOf(`${process.platform}-${process.arch}`) !== -1)))[0]
       const exe = latest.assets.filter((a: any) => ((a.content_type === 'application/x-msdownload') && (a.name.indexOf(`${process.platform}-${process.arch}`) !== -1)))[0]
 
       const zipUrl = zip ? zip.browser_download_url : null
       const exeUrl = exe ? exe.browser_download_url : null
+      const appZipUrl = appZip ? appZip.browser_download_url : null
 
       request(tags, (err, _res, body) => {
         if (err) {
@@ -48,7 +64,7 @@ export default function () {
 
         const latestTag = body.filter((tag: any) => tag.name === latest.tag_name)[0]
         const commit = latestTag.commit.sha
-        const versionData = { version, commit, zipUrl, exeUrl }
+        const versionData = { version, commit, zipUrl, exeUrl, appZipUrl }
         resolve(versionData)
       })
     })

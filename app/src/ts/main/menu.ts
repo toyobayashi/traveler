@@ -56,18 +56,19 @@ export default function createMenu (win: BrowserWindow): Menu {
               versionData = await checkUpdate('toyobayashi/traveler')
             } catch (err) {
               win.webContents.send('status', '已就绪')
-              msgbox(win, { type: 'error', message: '检查更新失败。\n' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+              msgbox(win, { type: 'error', title: app.getName(), message: '检查更新失败。\n' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
               return
             }
 
             win.webContents.send('status', '已就绪')
             if (!versionData) {
-              msgbox(win, { type: 'info', message: '当前没有可用的更新。', noLink: true, defaultId: 0, buttons: ['确定'] })
+              msgbox(win, { type: 'info', title: app.getName(), message: '当前没有可用的更新。', noLink: true, defaultId: 0, buttons: ['确定'] })
               return
             }
             const buttons = ['更新', '取消']
             const response = await msgbox(win, {
               type: 'info',
+              title: app.getName(),
               message: '有可用的更新',
               detail: `\n当前版本: ${app.getVersion()}\n最新版本: ${versionData.version}-${versionData.commit}`,
               buttons,
@@ -85,7 +86,7 @@ export default function createMenu (win: BrowserWindow): Menu {
                 })
               } catch (err) {
                 win.webContents.send('status', '更新失败')
-                msgbox(win, { type: 'info', message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+                msgbox(win, { type: 'info', title: app.getName(), message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
                 return
               }
 
@@ -96,7 +97,7 @@ export default function createMenu (win: BrowserWindow): Menu {
                   await zauz.unzip(p, getPath('../app'))
                 } catch (err) {
                   win.webContents.send('status', '更新失败')
-                  msgbox(win, { type: 'info', message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+                  msgbox(win, { type: 'info', title: app.getName(), message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
                   return
                 }
 
@@ -106,6 +107,7 @@ export default function createMenu (win: BrowserWindow): Menu {
                   const buttons = ['重新启动', '稍后重启']
                   const response = await msgbox(win, {
                     type: 'info',
+                    title: app.getName(),
                     message: '更新完成',
                     buttons,
                     defaultId: 0,
@@ -119,7 +121,7 @@ export default function createMenu (win: BrowserWindow): Menu {
 
                 } else {
                   win.webContents.send('status', '更新失败')
-                  msgbox(win, { type: 'info', message: '更新失败。', noLink: true, defaultId: 0, buttons: ['确定'] })
+                  msgbox(win, { type: 'info', title: app.getName(), message: '更新失败。', noLink: true, defaultId: 0, buttons: ['确定'] })
                   return
                 }
               }

@@ -48,7 +48,7 @@ export default function (githubRepo: string) {
         return
       }
       // const description = marked(latest.body)
-      const appZip = latest.assets.filter((a: any) => a.name === 'app.zip')[0]
+      const appZip = latest.assets.filter((a: any) => a.name === `app-${process.platform}.zip`)[0]
       const zip = latest.assets.filter((a: any) => ((a.content_type === 'application/x-zip-compressed' || a.content_type === 'application/zip') && (a.name.indexOf(`${process.platform}-${process.arch}`) !== -1)))[0]
       const exe = latest.assets.filter((a: any) => ((a.content_type === 'application/x-msdownload') && (a.name.indexOf(`${process.platform}-${process.arch}`) !== -1)))[0]
 

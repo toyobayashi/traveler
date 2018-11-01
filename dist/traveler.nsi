@@ -32,7 +32,7 @@ var ICONS_GROUP
 
 !insertmacro MUI_UNPAGE_INSTFILES
 
-!insertmacro MUI_LANGUAGE "English"
+!insertmacro MUI_LANGUAGE "SimpChinese"
 
 !insertmacro MUI_RESERVEFILE_INSTALLOPTIONS
 

@@ -15,6 +15,12 @@ if (process.env.NODE_ENV !== 'production') {
   commitDate = new Date((execSync('git log -1', { cwd: require('path').join(__dirname, '..') }).toString().match(/Date:\s*(.*?)\n/) as any)[1]).toISOString()
 }
 
+function msgbox (win: BrowserWindow, options: MessageBoxOptions) {
+  return new Promise<number>(resolve => {
+    dialog.showMessageBox(win, options, res => resolve(res))
+  })
+}
+
 export default function createMenu (win: BrowserWindow): Menu {
   const template: MenuItemConstructorOptions[] = [
     {
@@ -37,63 +43,99 @@ export default function createMenu (win: BrowserWindow): Menu {
         },
         {
           label: '检查更新...',
-          click () {
-            checkUpdate('toyobayashi/traveler').then((versionData) => {
-              if (!versionData) {
-                dialog.showMessageBox(win, { type: 'info', message: '当前没有可用的更新。', noLink: true, defaultId: 0, buttons: ['确定'] })
+          async click () {
+            win.webContents.send('status', '正在检查更新')
+            let versionData: {
+              version: string;
+              commit: string;
+              zipUrl: string | null;
+              exeUrl: string | null;
+              appZipUrl: string | null;
+            } | null = null
+            try {
+              versionData = await checkUpdate('toyobayashi/traveler')
+            } catch (err) {
+              win.webContents.send('status', '已就绪')
+              msgbox(win, { type: 'error', message: '检查更新失败。\n' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+              return
+            }
+
+            win.webContents.send('status', '已就绪')
+            if (!versionData) {
+              msgbox(win, { type: 'info', message: '当前没有可用的更新。', noLink: true, defaultId: 0, buttons: ['确定'] })
+              return
+            }
+            const buttons = ['更新', '取消']
+            const response = await msgbox(win, {
+              type: 'info',
+              message: '有可用的更新',
+              detail: `\n当前版本: ${app.getVersion()}\n最新版本: ${versionData.version}-${versionData.commit}`,
+              buttons,
+              defaultId: 0,
+              noLink: true
+            })
+
+            if (buttons[response] !== '更新') return
+
+            if (versionData.appZipUrl && process.env.NODE_ENV === 'production') {
+              let p: string = ''
+              try {
+                p = await download(versionData.appZipUrl, getPath('../app.zip'), (status) => {
+                  win.webContents.send('status', '更新中：' + Math.floor(status.loading) + '%')
+                })
+              } catch (err) {
+                win.webContents.send('status', '更新失败')
+                msgbox(win, { type: 'info', message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
                 return
               }
 
-              const buttons = ['更新', '取消']
-              dialog.showMessageBox(win, {
-                type: 'info',
-                message: '有可用的更新',
-                detail: `\n当前版本: ${app.getVersion()}\n最新版本: ${versionData.version}-${versionData.commit}`,
-                buttons,
-                defaultId: 0,
-                noLink: true
-              }, (response) => {
-                if (buttons[response] === '更新') {
-                  if (versionData.appZipUrl) {
-                    download(versionData.appZipUrl, getPath('../app.zip')).then((p) => {
-                      if (p) {
-                        fse.mkdirsSync(getPath('../app'))
-                        zauz.unzip(p, getPath('../app')).then(() => {
-                          const buttons = ['重新启动', '稍后重启']
-                          dialog.showMessageBox(win, {
-                            type: 'info',
-                            message: '更新完成',
-                            buttons,
-                            defaultId: 0,
-                            noLink: true
-                          }, (response) => {
-                            if (buttons[response] === '重新启动') {
-                              app.relaunch({ args: ['.'] })
-                              app.exit(0)
-                            }
-                          })
-                        })
-                      }
-                    }).catch(e => {
-                      dialog.showMessageBox(win, { type: 'info', message: '更新失败。' + e, noLink: true, defaultId: 0, buttons: ['确定'] })
-                    })
-                  } else if (versionData.exeUrl) {
-                    shell.openExternal(versionData.exeUrl)
-                  } else if (versionData.zipUrl) {
-                    shell.openExternal(versionData.zipUrl)
-                  } else {
-                    shell.openExternal('https://github.com/toyobayashi/traveler/releases')
-                  }
+              if (p) {
+                win.webContents.send('status', '正在应用更新')
+                fse.mkdirsSync(getPath('../app'))
+                try {
+                  await zauz.unzip(p, getPath('../app'))
+                } catch (err) {
+                  win.webContents.send('status', '更新失败')
+                  msgbox(win, { type: 'info', message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+                  return
                 }
-              })
-            }).catch((err) => {
-              dialog.showMessageBox(win, { type: 'error', message: '检查更新失败。\n' + err })
-            })
+
+                if (fse.existsSync(getPath('../app'))) {
+                  fse.removeSync(getPath('../app.zip'))
+                  win.webContents.send('status', '更新完成')
+                  const buttons = ['重新启动', '稍后重启']
+                  const response = await msgbox(win, {
+                    type: 'info',
+                    message: '更新完成',
+                    buttons,
+                    defaultId: 0,
+                    noLink: true
+                  })
+
+                  if (buttons[response] === '重新启动') {
+                    app.relaunch({ args: ['.'] })
+                    app.exit(0)
+                  }
+
+                } else {
+                  win.webContents.send('status', '更新失败')
+                  msgbox(win, { type: 'info', message: '更新失败。', noLink: true, defaultId: 0, buttons: ['确定'] })
+                  return
+                }
+              }
+            } else if (versionData.exeUrl) {
+              shell.openExternal(versionData.exeUrl)
+            } else if (versionData.zipUrl) {
+              shell.openExternal(versionData.zipUrl)
+            } else {
+              shell.openExternal('https://github.com/toyobayashi/traveler/releases')
+            }
+
           }
         },
         {
           label: '关于',
-          click () {
+          async click () {
             const detail = '\n' + Array.prototype.join.call([
               `版本: ${app.getVersion()}`,
               process.env.NODE_ENV === 'production' ? `提交: ${__non_webpack_require__('../package.json')._commit}` : `提交: ${commit}`,
@@ -105,7 +147,8 @@ export default function createMenu (win: BrowserWindow): Menu {
               `架构: ${process.arch}`
             ], '\n')
             const buttons = ['确定', '复制']
-            const opt: MessageBoxOptions = {
+
+            const response = await msgbox(win, {
               type: 'info',
               title: app.getName(),
               message: app.getName(),
@@ -113,13 +156,10 @@ export default function createMenu (win: BrowserWindow): Menu {
               noLink: true,
               defaultId: 0,
               detail
+            })
+            if (buttons[response] === '复制') {
+              clipboard.writeText(detail)
             }
-            const callback: (response: number, checkboxChecked: boolean) => void = (response) => {
-              if (buttons[response] === '复制') {
-                clipboard.writeText(detail)
-              }
-            }
-            dialog.showMessageBox(win, opt, callback)
           }
         },
         {

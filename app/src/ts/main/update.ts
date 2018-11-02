@@ -1,21 +1,40 @@
 import * as request from 'request'
-import { app } from 'electron'
+import { app, dialog, shell } from 'electron'
 import getPath from './path'
 import * as fs from 'original-fs'
 import * as fse from 'fs-extra'
 const asar = require('asar')
 
-if (process.env.NODE_ENV === 'production') {
-  if (fs.existsSync(getPath('../app'))) {
-    fs.unlinkSync(getPath('../app.asar'))
-    if (fs.existsSync(getPath('../app.asar.unpacked'))) fse.removeSync(getPath('../app.asar.unpacked'))
-    asar.createPackageWithOptions(getPath('../app'), getPath('../app.asar'), { unpack: '*.node' }, () => {
-      if (fs.existsSync(getPath('../app.asar'))) fse.removeSync(getPath('../app'))
-    })
+export function updateInit () {
+  if (process.env.NODE_ENV === 'production') {
+    if (fs.existsSync(getPath('../app')) && fs.existsSync(getPath('../app.asar')) && !fs.existsSync(getPath('../app.asar.unpacked'))) {
+      fs.unlinkSync(getPath('../app.asar'))
+      asar.createPackageWithOptions(getPath('../app'), getPath('../app.asar'), { unpack: '*.node' }, () => {
+        if (fs.existsSync(getPath('../app.asar'))) {
+          try {
+            fse.removeSync(getPath('../app'))
+          } catch (err) {
+            dialog.showMessageBox({
+              title: app.getName(),
+              type: 'error',
+              message: '请手动删除' + getPath('../app') + '再启动应用',
+              buttons: ['确定'],
+              defaultId: 0,
+              noLink: true
+            }, (res) => {
+              if (res === 0) {
+                shell.showItemInFolder(getPath('../app'))
+              }
+              process.exit(0)
+            })
+          }
+        }
+      })
+    }
   }
 }
 
-export default function (githubRepo: string) {
+export function checkUpdate (githubRepo: string) {
   const headers = {
     'User-Agent': 'traveler'
   }

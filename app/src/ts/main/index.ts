@@ -1,7 +1,10 @@
 import { app, BrowserWindow, BrowserWindowConstructorOptions, nativeImage, Menu } from 'electron'
 import { format } from 'url'
 import { join } from 'path'
+import { updateInit } from './update'
 import createMenu from './menu'
+
+updateInit()
 
 let mainWindow: BrowserWindow | null
 

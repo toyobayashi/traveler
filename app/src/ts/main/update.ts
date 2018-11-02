@@ -1,37 +1,20 @@
 import * as request from 'request'
-import { app, dialog, shell } from 'electron'
+import { app } from 'electron'
 import getPath from './path'
 import * as fs from 'original-fs'
-import * as fse from 'fs-extra'
-const asar = require('asar')
+import { spawn } from 'child_process'
 
 export function updateInit () {
   if (process.env.NODE_ENV === 'production') {
-    if (fs.existsSync(getPath('../app')) && fs.existsSync(getPath('../app.asar')) && !fs.existsSync(getPath('../app.asar.unpacked'))) {
-      fs.unlinkSync(getPath('../app.asar'))
-      asar.createPackageWithOptions(getPath('../app'), getPath('../app.asar'), { unpack: '*.node' }, () => {
-        if (fs.existsSync(getPath('../app.asar'))) {
-          try {
-            fse.removeSync(getPath('../app'))
-          } catch (err) {
-            dialog.showMessageBox({
-              title: app.getName(),
-              type: 'error',
-              message: '请手动删除' + getPath('../app') + '再启动应用',
-              buttons: ['确定'],
-              defaultId: 0,
-              noLink: true
-            }, (res) => {
-              if (res === 0) {
-                shell.showItemInFolder(getPath('../app'))
-              }
-              process.exit(0)
-            })
-          }
-        }
-      })
+    if (fs.existsSync(getPath('../app.zip'))) {
+      relaunch()
     }
   }
+}
+
+export function relaunch () {
+  spawn(getPath('../updater'), [getPath('..'), process.argv0], { detached: process.platform === 'win32', stdio: 'ignore' }).unref()
+  app.exit(0)
 }
 
 export function checkUpdate (githubRepo: string) {

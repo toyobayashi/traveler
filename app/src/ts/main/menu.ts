@@ -1,10 +1,8 @@
 import { app, Menu, MenuItemConstructorOptions, dialog, MessageBoxOptions, clipboard, BrowserWindow, shell } from 'electron'
-import { checkUpdate } from './update'
+import { checkUpdate, relaunch } from './update'
 import { execSync } from 'child_process'
 import download from './download'
 import getPath from './path'
-import * as zauz from 'zauz'
-import * as fse from 'fs-extra'
 
 declare function __non_webpack_require__ (module: string): any
 
@@ -15,7 +13,7 @@ if (process.env.NODE_ENV !== 'production') {
   commitDate = new Date((execSync('git log -1', { cwd: require('path').join(__dirname, '..') }).toString().match(/Date:\s*(.*?)\n/) as any)[1]).toISOString()
 }
 
-function msgbox (win: BrowserWindow, options: MessageBoxOptions) {
+export function msgbox (win: BrowserWindow, options: MessageBoxOptions) {
   return new Promise<number>(resolve => {
     dialog.showMessageBox(win, options, res => resolve(res))
   })
@@ -91,17 +89,6 @@ export default function createMenu (win: BrowserWindow): Menu {
               }
 
               if (p) {
-                win.webContents.send('status', '正在应用更新')
-                fse.mkdirsSync(getPath('../app'))
-                try {
-                  await zauz.unzip(p, getPath('../app'))
-                } catch (err) {
-                  win.webContents.send('status', '更新失败')
-                  msgbox(win, { type: 'info', title: app.getName(), message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
-                  return
-                }
-
-                fse.removeSync(getPath('../app.zip'))
                 win.webContents.send('status', '更新完成')
                 const buttons = ['重新启动', '稍后重启']
                 const response = await msgbox(win, {
@@ -114,8 +101,7 @@ export default function createMenu (win: BrowserWindow): Menu {
                 })
 
                 if (buttons[response] === '重新启动') {
-                  app.relaunch({ args: ['.'] })
-                  app.exit(0)
+                  relaunch()
                 }
               }
             } else if (versionData.exeUrl) {

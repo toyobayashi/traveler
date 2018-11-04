@@ -151,7 +151,7 @@ async function main () {
   const root = process.platform === 'darwin' ? path.join(appPath, `${pkg.name}.app/Contents/Resources/app`) : path.join(appPath, 'resources/app')
   await writePackageJson(root)
 
-  execSync(`npm install --no-package-lock --production --arch=${arch} --target_arch=${arch} --build-from-source --runtime=electron --target=3.0.6 --dist-url=https://atom.io/download/electron`, { cwd: root, stdio: 'inherit' })
+  execSync(`npm install --no-package-lock --production --arch=${arch} --target_arch=${arch} --build-from-source --runtime=electron --target=${pkg.devDependencies.electron} --dist-url=https://atom.io/download/electron`, { cwd: root, stdio: 'inherit' })
   await packNodeModules(root)
   await zipAsar(root)
   await copyUpdater(root)

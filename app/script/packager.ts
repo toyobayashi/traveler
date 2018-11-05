@@ -7,7 +7,6 @@ import { prod } from './webpack'
 import { zip } from 'zauz'
 import { productionPackage, packagerOptions, arch } from './packager.config'
 const { createPackageWithOptions } = require('asar')
-const { exec } = require('pkg')
 
 function bundleProductionCode () {
   console.log(`[${new Date().toLocaleString()}] Bundle production code...`)
@@ -118,6 +117,14 @@ function packNodeModules (root: string) {
   })
 }
 
+function installUpdater (root: string) {
+  const rootDotDot = path.join(root, '..')
+  fs.copySync(path.join(__dirname, '../src/updater'), path.join(rootDotDot, './updater'))
+  if (!fs.existsSync(path.join(rootDotDot, './updater/node_modules'))) {
+    execSync(`npm install --no-package-lock --production`, { cwd: path.join(rootDotDot, './updater'), stdio: 'inherit' })
+  }
+}
+
 async function zipAsar (root: string) {
   const rootDotDot = path.join(root, '..')
   fs.mkdirsSync(path.join(rootDotDot, '.tmp'))
@@ -127,21 +134,6 @@ async function zipAsar (root: string) {
   ])
   await zip(path.join(rootDotDot, '.tmp'), path.join(__dirname, `../../dist/app-${process.platform}.zip`))
   fs.removeSync(path.join(rootDotDot, '.tmp'))
-}
-
-async function copyUpdater (root: string) {
-  const rootDotDot = path.join(root, '..')
-  const executable = process.platform === 'win32' ? path.join(__dirname, `../../dist/updater-${arch}.exe`) : path.join(__dirname, `../../dist/updater-${process.platform}`)
-  if (!fs.existsSync(executable)) {
-    await exec([
-      '-t',
-      `node8-${process.platform === 'win32' ? 'win' : (process.platform === 'darwin' ? 'macos' : 'linux')}-${arch === 'x64' ? 'x64' : 'x86'}`,
-      '-o',
-      executable,
-      path.join(__dirname, '../src/js/updater.js')
-    ])
-  }
-  await fs.copy(executable, path.join(rootDotDot, process.platform === 'win32' ? 'updater.exe' : 'updater'))
 }
 
 async function main () {
@@ -154,7 +146,7 @@ async function main () {
   execSync(`npm install --no-package-lock --production --arch=${arch} --target_arch=${arch} --build-from-source --runtime=electron --target=${pkg.devDependencies.electron} --dist-url=https://atom.io/download/electron`, { cwd: root, stdio: 'inherit' })
   await packNodeModules(root)
   await zipAsar(root)
-  await copyUpdater(root)
+  installUpdater(root)
 
   const newPath = await rename(appPath)
   const size = await zipApp(newPath)

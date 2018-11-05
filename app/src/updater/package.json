@@ -1,0 +1,9 @@
+{
+  "name": "updater",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "fs-extra": "7.0.0",
+    "zauz": "1.0.2"
+  }
+}

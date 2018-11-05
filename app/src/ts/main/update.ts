@@ -2,7 +2,6 @@ import * as request from 'request'
 import { app } from 'electron'
 import getPath from './path'
 import * as fs from 'original-fs'
-import { spawn } from 'child_process'
 
 export function updateInit () {
   if (process.env.NODE_ENV === 'production') {
@@ -13,8 +12,9 @@ export function updateInit () {
 }
 
 export function relaunch () {
-  spawn(getPath('../updater'), [getPath('..'), process.argv0], { detached: process.platform === 'win32', stdio: 'ignore' }).unref()
-  app.exit(0)
+  fs.renameSync(getPath('../updater'), getPath('../app'))
+  app.relaunch()
+  app.exit()
 }
 
 export function checkUpdate (githubRepo: string) {

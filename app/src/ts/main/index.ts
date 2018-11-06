@@ -1,12 +1,8 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions, nativeImage, Menu, shell } from 'electron'
+import { app, BrowserWindow, BrowserWindowConstructorOptions, nativeImage, Menu } from 'electron'
 import { format } from 'url'
 import { join } from 'path'
-import { updateInit, checkUpdate, relaunch } from './update'
-import createMenu, { msgbox } from './menu'
-import download from './download'
-import getPath from './path'
-
-updateInit()
+import { checkUpdate } from './update'
+import createMenu from './menu'
 
 let mainWindow: BrowserWindow | null
 
@@ -33,64 +29,13 @@ function createWindow () {
   }
   mainWindow = new BrowserWindow(browerWindowOptions)
 
-  mainWindow.on('ready-to-show', async function () {
+  mainWindow.on('ready-to-show', function () {
     if (!mainWindow) return
     mainWindow.show()
     mainWindow.focus()
     if (process.env.NODE_ENV !== 'production') mainWindow.webContents.openDevTools()
 
-    const versionData = await checkUpdate('toyobayashi/traveler')
-    if (versionData) {
-      const buttons = ['更新', '取消']
-      const response = await msgbox(mainWindow, {
-        type: 'info',
-        title: app.getName(),
-        message: '有可用的更新',
-        detail: `\n当前版本: ${app.getVersion()}\n最新版本: ${versionData.version}-${versionData.commit}`,
-        buttons,
-        defaultId: 0,
-        noLink: true
-      })
-
-      if (buttons[response] !== '更新') return
-
-      if (versionData.appZipUrl && process.env.NODE_ENV === 'production') {
-        let p: string = ''
-        try {
-          p = await download(versionData.appZipUrl, getPath('../app.zip'), (status) => {
-            if (mainWindow) mainWindow.webContents.send('status', '更新中：' + Math.floor(status.loading) + '%')
-          })
-        } catch (err) {
-          mainWindow.webContents.send('status', '更新失败')
-          msgbox(mainWindow, { type: 'info', title: app.getName(), message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
-          return
-        }
-
-        if (p) {
-          mainWindow.webContents.send('status', '更新完成')
-          const buttons = ['重新启动', '稍后重启']
-          const response = await msgbox(mainWindow, {
-            type: 'info',
-            title: app.getName(),
-            message: '更新完成',
-            buttons,
-            defaultId: 0,
-            noLink: true
-          })
-
-          if (buttons[response] === '重新启动') {
-            relaunch()
-          }
-        }
-      } else if (versionData.exeUrl) {
-        shell.openExternal(versionData.exeUrl)
-      } else if (versionData.zipUrl) {
-        shell.openExternal(versionData.zipUrl)
-      } else {
-        shell.openExternal('https://github.com/toyobayashi/traveler/releases')
-      }
-    }
-
+    return checkUpdate(mainWindow, true)
   })
 
   if (process.env.NODE_ENV !== 'production') {

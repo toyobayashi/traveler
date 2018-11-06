@@ -1,74 +1,75 @@
-import * as request from 'request'
-import { app } from 'electron'
-import getPath from './path'
-import * as fs from 'original-fs'
+import { BrowserWindow, app, shell, dialog, MessageBoxOptions } from 'electron'
+import * as Updater from 'electron-github-asar-updater'
 
-export function updateInit () {
-  if (process.env.NODE_ENV === 'production') {
-    if (fs.existsSync(getPath('../app.zip'))) {
-      relaunch()
-    }
-  }
-}
+const updater = new Updater('toyobayashi/traveler')
 
-export function relaunch () {
-  fs.renameSync(getPath('../updater'), getPath('../app'))
-  app.relaunch()
-  app.exit()
-}
-
-export function checkUpdate (githubRepo: string) {
-  const headers = {
-    'User-Agent': 'traveler'
-  }
-  const releases = {
-    url: `https://api.github.com/repos/${githubRepo}/releases`,
-    json: true,
-    headers
-  }
-  const tags = {
-    url: `https://api.github.com/repos/${githubRepo}/tags`,
-    json: true,
-    headers
-  }
-  return new Promise<{ version: string; commit: string; zipUrl: string | null; exeUrl: string | null; appZipUrl: string | null } | null>((resolve, reject) => {
-    request(releases, (err, _res, body) => {
-      if (err) {
-        reject(err)
-        return
-      }
-
-      if (!body.length) {
-        resolve(null)
-        return
-      }
-
-      const latest = body[0]
-      const version = latest.tag_name.substr(1)
-      if (app.getVersion() >= version) {
-        resolve(null)
-        return
-      }
-      // const description = marked(latest.body)
-      const appZip = latest.assets.filter((a: any) => a.name === `app-${process.platform}.zip`)[0]
-      const zip = latest.assets.filter((a: any) => ((a.content_type === 'application/x-zip-compressed' || a.content_type === 'application/zip') && (a.name.indexOf(`${process.platform}-${process.arch}`) !== -1)))[0]
-      const exe = latest.assets.filter((a: any) => ((a.content_type === 'application/x-msdownload') && (a.name.indexOf(`${process.platform}-${process.arch}`) !== -1)))[0]
-
-      const zipUrl = zip ? zip.browser_download_url : null
-      const exeUrl = exe ? exe.browser_download_url : null
-      const appZipUrl = appZip ? appZip.browser_download_url : null
-
-      request(tags, (err, _res, body) => {
-        if (err) {
-          reject(err)
-          return
-        }
-
-        const latestTag = body.filter((tag: any) => tag.name === latest.tag_name)[0]
-        const commit = latestTag.commit.sha
-        const versionData = { version, commit, zipUrl, exeUrl, appZipUrl }
-        resolve(versionData)
-      })
-    })
+export function msgbox (win: BrowserWindow, options: MessageBoxOptions) {
+  return new Promise<number>(resolve => {
+    dialog.showMessageBox(win, options, res => resolve(res))
   })
+}
+
+export async function checkUpdate (win: BrowserWindow, quiet?: true) {
+  if (!quiet) win.webContents.send('status', '正在检查更新')
+
+  try {
+    await updater.check()
+  } catch (err) {
+    if (!quiet) win.webContents.send('status', '已就绪')
+    msgbox(win, { type: 'error', title: app.getName(), message: '检查更新失败。\n' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+    return
+  }
+
+  if (!quiet) win.webContents.send('status', '已就绪')
+  const info = updater.getUpdateInfo()
+  if (!info) {
+    if (!quiet) msgbox(win, { type: 'info', title: app.getName(), message: '当前没有可用的更新。', noLink: true, defaultId: 0, buttons: ['确定'] })
+    return
+  }
+
+  const buttons = ['更新', '取消']
+  const response = await msgbox(win, {
+    type: 'info',
+    title: app.getName(),
+    message: '有可用的更新',
+    detail: `\n当前版本: ${app.getVersion()}\n最新版本: ${info.version}-${info.commit}`,
+    buttons,
+    defaultId: 0,
+    noLink: true
+  })
+
+  if (buttons[response] !== '更新') return
+
+  if (info.appZipUrl && process.env.NODE_ENV === 'production') {
+    try {
+      await updater.download((status: any) => {
+        win.webContents.send('status', '更新中：' + Math.floor(status.loading) + '%')
+      })
+    } catch (err) {
+      win.webContents.send('status', '更新失败')
+      msgbox(win, { type: 'error', title: app.getName(), message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+      return
+    }
+
+    win.webContents.send('status', '更新完成')
+    const buttons = ['重新启动', '稍后重启']
+    const response = await msgbox(win, {
+      type: 'info',
+      title: app.getName(),
+      message: '更新完成',
+      buttons,
+      defaultId: 0,
+      noLink: true
+    })
+
+    if (buttons[response] === '重新启动') {
+      updater.relaunch()
+    }
+  } else if (info.exeUrl) {
+    shell.openExternal(info.exeUrl)
+  } else if (info.zipUrl) {
+    shell.openExternal(info.zipUrl)
+  } else {
+    shell.openExternal('https://github.com/toyobayashi/traveler/releases')
+  }
 }

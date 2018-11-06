@@ -117,14 +117,6 @@ function packNodeModules (root: string) {
   })
 }
 
-function installUpdater (root: string) {
-  const rootDotDot = path.join(root, '..')
-  fs.copySync(path.join(__dirname, '../src/updater'), path.join(rootDotDot, './updater'))
-  if (!fs.existsSync(path.join(rootDotDot, './updater/node_modules'))) {
-    execSync(`npm install --no-package-lock --production`, { cwd: path.join(rootDotDot, './updater'), stdio: 'inherit' })
-  }
-}
-
 async function zipAsar (root: string) {
   const rootDotDot = path.join(root, '..')
   fs.mkdirsSync(path.join(rootDotDot, '.tmp'))
@@ -146,7 +138,6 @@ async function main () {
   execSync(`npm install --no-package-lock --production --arch=${arch} --target_arch=${arch} --build-from-source --runtime=electron --target=${pkg.devDependencies.electron} --dist-url=https://atom.io/download/electron`, { cwd: root, stdio: 'inherit' })
   await packNodeModules(root)
   await zipAsar(root)
-  installUpdater(root)
 
   const newPath = await rename(appPath)
   const size = await zipApp(newPath)

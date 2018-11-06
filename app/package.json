@@ -65,7 +65,7 @@
     "zauz": "^1.0.2"
   },
   "dependencies": {
-    "electron-github-asar-updater": "^1.0.0",
+    "electron-github-asar-updater": "^1.1.1",
     "request": "2.88.0"
   }
 }

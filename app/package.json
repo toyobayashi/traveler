@@ -37,7 +37,7 @@
     "@types/webpack-node-externals": "^1.6.3",
     "cross-env": "^5.2.0",
     "css-loader": "^1.0.1",
-    "electron": "3.0.7",
+    "electron": "3.0.8",
     "electron-packager": "^12.2.0",
     "file-loader": "^2.0.0",
     "fork-ts-checker-webpack-plugin": "^0.4.14",

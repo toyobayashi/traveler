@@ -1,6 +1,8 @@
 import * as webpack from 'webpack'
 import webpackConfig from './webpack.config'
-import config from './config'
+import { devServerHost, devServerPort, publicPath } from './config.json'
+import { join } from 'path'
+import { Configuration } from 'webpack-dev-server'
 
 const toStringOptions: webpack.Stats.ToStringOptionsObject = {
   colors: true,
@@ -21,15 +23,24 @@ if (require.main === module) {
       poll: undefined
     }, handler)
 
-    import('webpack-serve').then(serve => serve({}, {
-      config: webpackConfig.rendererConfig,
-      hotClient: {
-        reload: false,
-        port: config.websocketPort,
-        validTargets: ['electron-renderer']
-      },
-      port: config.devServerPort
-    }))
+    import('webpack-dev-server').then(devServer => {
+      const options: Configuration = {
+        stats: {
+          colors: true
+        },
+        host: devServerHost,
+        hotOnly: true,
+        inline: true,
+        contentBase: join(__dirname, '../..'),
+        publicPath: publicPath
+      }
+      devServer.addDevServerEntrypoints(webpackConfig.rendererConfig, options)
+
+      const server = new devServer(webpack(webpackConfig.rendererConfig), options)
+      server.listen(devServerPort, devServerHost, () => {
+        console.log('webpack server start.')
+      })
+    })
   }
 }
 

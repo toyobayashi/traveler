@@ -39,7 +39,8 @@ function createWindow () {
   })
 
   if (process.env.NODE_ENV !== 'production') {
-    mainWindow.loadURL('http://localhost:7080')
+    const { devServerHost, devServerPort, publicPath } = require('../../../script/config.json')
+    mainWindow.loadURL(`http://${devServerHost}:${devServerPort}${publicPath}`)
   } else {
     mainWindow.loadURL(format({
       pathname: join(__dirname, 'index.html'),

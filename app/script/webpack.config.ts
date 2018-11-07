@@ -1,11 +1,12 @@
 import * as path from 'path'
-import { Configuration } from 'webpack'
+import { Configuration, Output, HotModuleReplacementPlugin } from 'webpack'
 import * as HtmlWebpackPlugin from 'html-webpack-plugin'
 import * as MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import * as OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin'
 import * as UglifyJSPlugin from 'uglifyjs-webpack-plugin'
 import * as webpackNodeExternals from 'webpack-node-externals'
 import { VueLoaderPlugin } from 'vue-loader'
+import { publicPath } from './config.json'
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
 const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development'
@@ -58,7 +59,7 @@ let rendererConfig: Configuration = {
   },
   output: {
     filename: '[name].js',
-    path: path.join(__dirname, '../public')
+    path: path.join(__dirname, '../..', publicPath)
   },
   node: {
     __dirname: false,
@@ -161,12 +162,14 @@ if (process.env.NODE_ENV === 'production') {
     minimizer: [uglifyJSPlugin()]
   }
 } else {
+  (rendererConfig.output as Output).publicPath = publicPath
   rendererConfig.devtool = mainConfig.devtool = 'eval-source-map'
   rendererConfig.plugins = [
     ...(rendererConfig.plugins || []),
     new ForkTsCheckerWebpackPlugin({
       vue: true
-    })
+    }),
+    new HotModuleReplacementPlugin()
   ]
 }
 

@@ -1,0 +1,5 @@
+{
+  "devServerHost": "localhost",
+  "devServerPort": 7080,
+  "publicPath": "/app/public/"
+}

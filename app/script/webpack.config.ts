@@ -3,11 +3,11 @@ import { Configuration, Output, HotModuleReplacementPlugin } from 'webpack'
 import * as HtmlWebpackPlugin from 'html-webpack-plugin'
 import * as MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import * as OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin'
-import * as UglifyJSPlugin from 'uglifyjs-webpack-plugin'
 import * as webpackNodeExternals from 'webpack-node-externals'
 import { VueLoaderPlugin } from 'vue-loader'
 import { publicPath } from './config.json'
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+const TerserWebpackPlugin = require('terser-webpack-plugin')
 
 const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development'
 
@@ -129,16 +129,14 @@ let rendererConfig: Configuration = {
 }
 
 if (process.env.NODE_ENV === 'production') {
-  const uglifyJSPlugin = () => new UglifyJSPlugin({
+  const terserPlugin = () => new TerserWebpackPlugin({
     parallel: true,
     cache: true,
-    uglifyOptions: {
+    terserOptions: {
       ecma: 8,
       output: {
-        comments: false,
         beautify: false
-      },
-      warnings: false
+      }
     }
   })
 
@@ -151,7 +149,7 @@ if (process.env.NODE_ENV === 'production') {
   rendererConfig.optimization = {
     ...(rendererConfig.optimization || {}),
     minimizer: [
-      uglifyJSPlugin(),
+      terserPlugin(),
       new OptimizeCSSAssetsPlugin({})
     ]
   }
@@ -159,7 +157,7 @@ if (process.env.NODE_ENV === 'production') {
     whitelist: [/vue/]
   })]
   mainConfig.optimization = {
-    minimizer: [uglifyJSPlugin()]
+    minimizer: [terserPlugin()]
   }
 } else {
   (rendererConfig.output as Output).publicPath = publicPath

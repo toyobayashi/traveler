@@ -16,14 +16,14 @@ export async function checkUpdate (win: BrowserWindow, quiet?: true) {
     await updater.check()
   } catch (err) {
     if (!quiet) win.webContents.send('status', '已就绪')
-    msgbox(win, { type: 'error', title: app.getName(), message: '检查更新失败。\n' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+    await msgbox(win, { type: 'error', title: app.getName(), message: '检查更新失败。\n' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
     return
   }
 
   if (!quiet) win.webContents.send('status', '已就绪')
   const info = updater.getUpdateInfo()
   if (!info) {
-    if (!quiet) msgbox(win, { type: 'info', title: app.getName(), message: '当前没有可用的更新。', noLink: true, defaultId: 0, buttons: ['确定'] })
+    if (!quiet) await msgbox(win, { type: 'info', title: app.getName(), message: '当前没有可用的更新。', noLink: true, defaultId: 0, buttons: ['确定'] })
     return
   }
 
@@ -47,7 +47,7 @@ export async function checkUpdate (win: BrowserWindow, quiet?: true) {
       })
     } catch (err) {
       win.webContents.send('status', '更新失败')
-      msgbox(win, { type: 'error', title: app.getName(), message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+      await msgbox(win, { type: 'error', title: app.getName(), message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
       return
     }
 

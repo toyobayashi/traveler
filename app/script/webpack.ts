@@ -3,6 +3,7 @@ import webpackConfig from './webpack.config'
 import { devServerHost, devServerPort, publicPath } from './config.json'
 import { join } from 'path'
 import { Configuration } from 'webpack-dev-server'
+import { removeSync } from 'fs-extra'
 
 const toStringOptions: webpack.Stats.ToStringOptionsObject = {
   colors: true,
@@ -17,6 +18,7 @@ if (require.main === module) {
   if (process.env.NODE_ENV === 'production') {
     prod()
   } else {
+    if (webpackConfig.rendererConfig.output && webpackConfig.rendererConfig.output.path) removeSync(webpackConfig.rendererConfig.output.path)
     const mainCompiler = webpack(webpackConfig.mainConfig)
     mainCompiler.watch({
       aggregateTimeout: 200,

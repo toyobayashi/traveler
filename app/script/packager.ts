@@ -124,7 +124,7 @@ async function zipAsar (root: string) {
     fs.copy(path.join(rootDotDot, 'app.asar'), path.join(rootDotDot, '.tmp/app.asar')),
     fs.existsSync(path.join(rootDotDot, 'app.asar.unpacked')) ? fs.copy(path.join(rootDotDot, 'app.asar.unpacked'), path.join(rootDotDot, '.tmp/app.asar.unpacked')) : Promise.resolve()
   ])
-  await zip(path.join(rootDotDot, '.tmp'), path.join(__dirname, `../../dist/app-${process.platform}.zip`))
+  await zip(path.join(rootDotDot, '.tmp'), path.join(__dirname, `../../dist/app-${process.platform}-${arch}.zip`))
   fs.removeSync(path.join(rootDotDot, '.tmp'))
 }
 

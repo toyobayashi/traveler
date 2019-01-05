@@ -40,30 +40,38 @@ export async function checkUpdate (win: BrowserWindow, quiet?: true) {
 
   if (buttons[response] !== '更新') return
 
-  if (info.appZipUrl && process.env.NODE_ENV === 'production') {
-    try {
-      await updater.download((status: any) => {
-        win.webContents.send('status', '更新中：' + Math.floor(status.loading) + '%')
+  if (/* info.appZipUrl &&  */process.env.NODE_ENV === 'production') {
+    if (updater.isReadyToDownload()) {
+      try {
+        const downloadResult = await updater.download((status: any) => {
+          win.webContents.send('status', '更新中：' + Math.floor(status.loading) + '%')
+        })
+
+        if (!downloadResult) {
+          win.webContents.send('status', '更新失败')
+          await msgbox(win, { type: 'error', title: app.getName(), message: '更新失败。', noLink: true, defaultId: 0, buttons: ['确定'] })
+          return
+        }
+      } catch (err) {
+        win.webContents.send('status', '更新失败')
+        await msgbox(win, { type: 'error', title: app.getName(), message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
+        return
+      }
+
+      win.webContents.send('status', '更新完成')
+      const buttons = ['重新启动', '稍后重启']
+      const response = await msgbox(win, {
+        type: 'info',
+        title: app.getName(),
+        message: '更新完成',
+        buttons,
+        defaultId: 0,
+        noLink: true
       })
-    } catch (err) {
-      win.webContents.send('status', '更新失败')
-      await msgbox(win, { type: 'error', title: app.getName(), message: '更新失败。' + err, noLink: true, defaultId: 0, buttons: ['确定'] })
-      return
-    }
 
-    win.webContents.send('status', '更新完成')
-    const buttons = ['重新启动', '稍后重启']
-    const response = await msgbox(win, {
-      type: 'info',
-      title: app.getName(),
-      message: '更新完成',
-      buttons,
-      defaultId: 0,
-      noLink: true
-    })
-
-    if (buttons[response] === '重新启动') {
-      updater.relaunch()
+      if (buttons[response] === '重新启动') {
+        updater.relaunch()
+      }
     }
   } else if (info.exeUrl) {
     shell.openExternal(info.exeUrl)
